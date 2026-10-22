@@ -714,7 +714,7 @@ let toastT; function toast(msg){const t=document.getElementById('toast'); t.text
   function draw(idx){
     let im=imgs[idx];
     if(!im||!im.complete||!im.naturalWidth){ for(let k=idx-1;k>=0;k--){ if(imgs[k].complete&&imgs[k].naturalWidth){ im=imgs[k]; break } im=null } }
-    if(!im) return false;
+    if(!im||!im.complete||!im.naturalWidth) return false;
     const cw=cv.width, ch=cv.height, sc=Math.max(cw/im.naturalWidth, ch/im.naturalHeight);
     const w=im.naturalWidth*sc, h=im.naturalHeight*sc;
     ctx.drawImage(im,(cw-w)/2,(ch-h)/2,w,h);
