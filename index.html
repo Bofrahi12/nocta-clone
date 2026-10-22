@@ -259,6 +259,19 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
 .chip{border:1.5px solid #c9d4dd;border-radius:999px;padding:8px 20px;font-size:12px;font-weight:700;letter-spacing:.1em;background:#fff;transition:.25s}
 .chip:hover{border-color:var(--ink)}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* v4 scroll-film hero (Mnar Park technique: pinned canvas, lerped scrub) */
+.filmwrap{height:280vh;position:relative;background:#000}
+.filmstage{position:sticky;top:0;height:100svh;overflow:hidden}
+.filmstage canvas{width:100%;height:100%;display:block}
+.filmcap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;opacity:0;padding:0 20px;pointer-events:none}
+.filmcap small{font-size:12px;font-weight:700;letter-spacing:.4em;margin-bottom:14px}
+.filmcap h2{font-weight:900;text-transform:uppercase;line-height:.95;letter-spacing:-.02em;font-size:clamp(40px,7.5vw,104px);text-shadow:0 10px 50px rgba(0,0,0,.45)}
+.filmcap p{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(20px,3vw,34px);text-shadow:0 6px 30px rgba(0,0,0,.5)}
+.filmcap .pill{pointer-events:auto;border-color:#fff;color:#fff;margin-top:26px}
+.filmcap .pill:hover{background:#fff;color:#000}
+.filmprog{position:absolute;left:0;bottom:0;height:3px;background:#fff;width:0;z-index:4}
+.filmhint{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.75);font-size:10.5px;font-weight:700;letter-spacing:.34em;z-index:4}
 </style>
 </head>
 <body>
@@ -297,6 +310,19 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
 </div>
 
 <main id="home">
+  <!-- SCROLL FILM -->
+  <section class="filmwrap" id="filmwrap">
+    <div class="filmstage">
+      <canvas id="filmCanvas"></canvas>
+      <div class="filmcap" data-cap="0"><small>FS / 26 — THE FILM</small><h2>Boufrahi</h2></div>
+      <div class="filmcap" data-cap="1"><p>Made for the night shift.</p></div>
+      <div class="filmcap" data-cap="2"><p>Worn around the clock.</p></div>
+      <div class="filmcap" data-cap="3"><small>DROP 02 — LIVE NOW</small><h2>One brand.<br>Worldwide.</h2><a class="pill" href="#drop">Shop the drop</a></div>
+      <div class="filmhint">SCROLL</div>
+      <div class="filmprog" id="filmProg"></div>
+    </div>
+  </section>
+
   <!-- HERO -->
   <section class="hero" id="hero">
     <div class="slide dark on">
@@ -358,6 +384,10 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
   <div class="drophead"><h2>The Essentials</h2></div>
   <section class="grid" id="grid2"></section>
 
+  <!-- TRENDING NOW -->
+  <div class="drophead"><h2>Trending Now</h2></div>
+  <section class="grid" id="grid3"></section>
+
   <!-- MARQUEE -->
   <div class="marquee"><div class="mtrack" id="mtrack"></div></div>
 
@@ -383,6 +413,8 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
     <button class="chip" onclick="filterColl(this,'Hoodies')">Hoodies</button>
     <button class="chip" onclick="filterColl(this,'Tees & Shirts')">Tees &amp; Shirts</button>
     <button class="chip" onclick="filterColl(this,'Bottoms')">Bottoms</button>
+    <button class="chip" onclick="filterColl(this,'Footwear')">Footwear</button>
+    <button class="chip" onclick="filterColl(this,'Knitwear')">Knitwear</button>
     <button class="chip" onclick="filterColl(this,'Accessories')">Accessories</button>
   </div>
   <div id="collGrid"></div>
@@ -410,9 +442,7 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
         <small>J. Balvin · Jay Z<br>· Ye</small>
       </div>
       <p class="slabel">Size</p>
-      <div class="sizes" id="pSizes">
-        <button class="on" data-s="S">S</button><button data-s="M">M</button><button data-s="L">L</button><button data-s="XL">XL</button>
-      </div>
+      <div class="sizes" id="pSizes"></div>
       <div class="qtyrow"><span class="qlabel">Quantity</span>
         <span class="qtyctl"><button onclick="chQtyPDP(-1)">−</button><span id="pQty">1</span><button onclick="chQtyPDP(1)">+</button></span>
       </div>
@@ -492,11 +522,47 @@ const PRODUCTS=[
  {id:'cargo', cat:'Bottoms', name:'Cargo Pants Black', price:68, img:'img/cargo-black.webp', gal:['img/cargo-black.webp'],
   desc:'Tapered cargo pants in black with large bellows side pockets, an elastic drawstring waist and clean white drawstring tips. Cut slim through the leg with room to move.',
   specs:[['Fit','tapered, regular rise'],['Fabric','cotton ripstop'],['Details','two bellows cargo pockets, drawstring waist'],['Closure','elastic waist with drawcord'],['Finish','reinforced stitching']], model:'Model is 1.90 m and wears size M.'},
- {id:'cap', cat:'Accessories', name:'Star Cap Black', price:34, img:'img/cap-black.webp', gal:['img/cap-black.webp'],
+ {id:'cap', cat:'Accessories', name:'Star Cap Black', price:34, sizes:['One Size'], img:'img/cap-black.webp', gal:['img/cap-black.webp'],
   desc:'Six-panel cap in black twill with a metallic silver star emblem embroidered on the front. Adjustable strap back and a pre-curved brim.',
-  specs:[['Fit','one size, adjustable'],['Fabric','cotton twill'],['Details','metallic star front embroidery'],['Closure','adjustable strap back'],['Finish','pre-curved brim']], model:'One size fits all.'}
+  specs:[['Fit','one size, adjustable'],['Fabric','cotton twill'],['Details','metallic star front embroidery'],['Closure','adjustable strap back'],['Finish','pre-curved brim']], model:'One size fits all.'},
+ {id:'sneakerswhite', cat:'Footwear', name:'Runner Sneakers White', price:88, sizes:['40','41','42','43','44','45'], img:'img/sneakers-white.webp', gal:['img/sneakers-white.webp','img/film-sneaker.webp'],
+  desc:'Chunky runner in white and light grey with breathable mesh and suede panels over a sculpted cushioned sole. Built for the street, finished clean enough for every fit.',
+  specs:[['Fit','true to size'],['Upper','mesh with suede overlays'],['Sole','sculpted cushioned EVA'],['Details','padded collar, tonal laces'],['Finish','reflective heel tab']], model:'Model wears EU 43.'},
+ {id:'sneakersblack', cat:'Footwear', name:'Chunky Sneakers Black', price:92, sizes:['40','41','42','43','44','45'], img:'img/sneakers-black.webp', gal:['img/sneakers-black.webp'],
+  desc:'All-black chunky sneaker with layered technical panels and a bold sculpted sole. The pair that finishes every night-shift fit.',
+  specs:[['Fit','true to size'],['Upper','technical mesh and synthetic panels'],['Sole','sculpted high-abrasion rubber'],['Details','padded collar, tonal laces'],['Finish','matte blackout look']], model:'Model wears EU 43.'},
+ {id:'denim', cat:'Jackets', name:'Denim Trucker Jacket', price:86, img:'img/denim-jacket.webp', gal:['img/denim-jacket.webp'],
+  desc:'Medium-wash denim trucker with metal buttons, two chest pockets and a clean regular cut. The layer that works over every hoodie in the drop.',
+  specs:[['Fit','regular'],['Fabric','rigid cotton denim'],['Closure','metal button front'],['Details','two chest pockets, two side pockets'],['Finish','medium stone wash']], model:'Model is 1.90 m and wears size M.'},
+ {id:'varsity', cat:'Jackets', name:'Varsity Jacket Black White', price:110, img:'img/varsity-jacket.webp', gal:['img/varsity-jacket.webp'],
+  desc:'Black varsity jacket with white contrast sleeves, striped ribbed trims and an embroidered B on the chest. A stadium classic cut for the street.',
+  specs:[['Fit','regular, ribbed hem'],['Body','wool-blend melton'],['Sleeves','contrast faux leather'],['Details','embroidered chest letter, striped rib trims'],['Closure','snap buttons']], model:'Model is 1.90 m and wears size M.'},
+ {id:'windbreaker', cat:'Jackets', name:'Colour-Block Windbreaker', price:74, img:'img/windbreaker.webp', gal:['img/windbreaker.webp'],
+  desc:'Featherlight windbreaker in black, grey and white panels with a packable hood and full front zip. Water-resistant finish for moving through the city in any weather.',
+  specs:[['Fit','regular'],['Fabric','lightweight ripstop nylon'],['Finish','water-resistant coating'],['Details','packable hood, elastic cuffs'],['Closure','full front zip']], model:'Model is 1.90 m and wears size M.'},
+ {id:'vest', cat:'Jackets', name:'Puffer Vest Black', price:64, img:'img/puffer-vest.webp', gal:['img/puffer-vest.webp'],
+  desc:'Sleeveless black puffer vest with horizontal baffles and a stand collar. Layers over hoodies and knits without the bulk of a full jacket.',
+  specs:[['Fit','regular'],['Shell','matte ripstop nylon'],['Fill','lightweight insulated padding'],['Closure','full front zip with stand collar'],['Details','two zipped hand pockets']], model:'Model is 1.90 m and wears size M.'},
+ {id:'flannel', cat:'Tees & Shirts', name:'Plaid Flannel Shirt', price:56, img:'img/flannel-shirt.webp', gal:['img/flannel-shirt.webp'],
+  desc:'Red and black plaid flannel shirt in brushed cotton with two chest pockets. Wear it buttoned, or open over a tee.',
+  specs:[['Fit','regular'],['Fabric','brushed cotton flannel'],['Details','two chest pockets'],['Closure','button front'],['Finish','yarn-dyed plaid']], model:'Model is 1.90 m and wears size M.'},
+ {id:'trackpants', cat:'Bottoms', name:'Track Pants Black White', price:58, img:'img/track-pants.webp', gal:['img/track-pants.webp'],
+  desc:'Black track pants with a clean white side stripe, elastic ankle cuffs and a drawstring waist. Cut tapered for a sharp line.',
+  specs:[['Fit','tapered'],['Fabric','technical tricot'],['Details','white side stripe, drawstring waist'],['Cuffs','elastic ankle cuffs'],['Pockets','two side pockets']], model:'Model is 1.90 m and wears size M.'},
+ {id:'shorts', cat:'Bottoms', name:'Athletic Shorts Black', price:38, img:'img/shorts-black.webp', gal:['img/shorts-black.webp'],
+  desc:'Lightweight black athletic shorts with an elastic drawstring waist and a small white star logo on the leg. Above-knee cut, ready to move.',
+  specs:[['Fit','above knee'],['Fabric','lightweight woven polyester'],['Details','star leg logo, drawstring waist'],['Pockets','two side pockets'],['Finish','quick-dry']], model:'Model is 1.90 m and wears size M.'},
+ {id:'knitsweater', cat:'Knitwear', name:'Chunky Knit Sweater Cream', price:72, img:'img/knit-sweater.webp', gal:['img/knit-sweater.webp'],
+  desc:'Chunky knit crewneck in warm cream with ribbed collar, cuffs and hem. Heavy in hand, soft on skin — the quiet piece of the drop.',
+  specs:[['Fit','relaxed'],['Fabric','chunky acrylic-wool knit'],['Details','ribbed collar, cuffs and hem'],['Collar','crew neck'],['Finish','garment-washed softness']], model:'Model is 1.90 m and wears size M.'},
+ {id:'beanie', cat:'Accessories', name:'Star Beanie Black', price:24, sizes:['One Size'], img:'img/beanie-black.webp', gal:['img/beanie-black.webp'],
+  desc:'Ribbed knit beanie in black with a small white star embroidered on the folded cuff. One size, deep fit.',
+  specs:[['Fit','one size, deep'],['Fabric','ribbed acrylic knit'],['Details','embroidered star on cuff'],['Cuff','folded, double layer'],['Finish','stretch recovery knit']], model:'One size fits all.'},
+ {id:'crossbody', cat:'Accessories', name:'Crossbody Bag Black', price:46, sizes:['One Size'], img:'img/crossbody-bag.webp', gal:['img/crossbody-bag.webp'],
+  desc:'Compact black crossbody bag with an adjustable strap, a front zip pocket and a small silver star patch. Phone, wallet, keys — nothing else needed.',
+  specs:[['Fit','one size, adjustable strap'],['Shell','matte technical nylon'],['Details','front zip pocket, star patch'],['Strap','adjustable webbing'],['Lining','branded interior lining']], model:'One size fits all.'}
 ];
-const COLL_IMG={puffer:'img/puffer-orange.webp',piped:'img/piped-front.webp',halfzip:'img/halfzip-back.webp',knit:'img/knit-iceblue.webp',stitch:'img/stitch-hoodie.webp',mesh:'img/mesh-camo.webp',pufferblack:'img/puffer-black.webp',bomber:'img/bomber-olive.webp',hoodiegrey:'img/hoodie-grey.webp',tee:'img/tee-white.webp',cargo:'img/cargo-black.webp',cap:'img/cap-black.webp'};
+const COLL_IMG={puffer:'img/puffer-orange.webp',piped:'img/piped-front.webp',halfzip:'img/halfzip-back.webp',knit:'img/knit-iceblue.webp',stitch:'img/stitch-hoodie.webp',mesh:'img/mesh-camo.webp',pufferblack:'img/puffer-black.webp',bomber:'img/bomber-olive.webp',hoodiegrey:'img/hoodie-grey.webp',tee:'img/tee-white.webp',cargo:'img/cargo-black.webp',cap:'img/cap-black.webp',sneakerswhite:'img/sneakers-white.webp',sneakersblack:'img/sneakers-black.webp',denim:'img/denim-jacket.webp',varsity:'img/varsity-jacket.webp',windbreaker:'img/windbreaker.webp',vest:'img/puffer-vest.webp',flannel:'img/flannel-shirt.webp',trackpants:'img/track-pants.webp',shorts:'img/shorts-black.webp',knitsweater:'img/knit-sweater.webp',beanie:'img/beanie-black.webp',crossbody:'img/crossbody-bag.webp'};
 const fmt=n=>'$'+n.toFixed(2)+' USD';
 
 const HOV={puffer:'img/hero-orange.webp',piped:'img/piped-back.webp',halfzip:'img/halfzip-model.webp'};
@@ -511,7 +577,8 @@ function fillGrid(el,list,reveal){
   });
 }
 fillGrid(document.getElementById('grid'),PRODUCTS.slice(0,6),true);
-fillGrid(document.getElementById('grid2'),PRODUCTS.slice(6),true);
+fillGrid(document.getElementById('grid2'),PRODUCTS.slice(6,12),true);
+fillGrid(document.getElementById('grid3'),PRODUCTS.slice(12),true);
 const cg=document.getElementById('collGrid');
 function renderColl(cat){
   cg.innerHTML='';
@@ -526,7 +593,7 @@ function filterColl(btn,cat){
 }
 
 /* lookbook */
-const LOOK=['img/hero-black.webp','img/halfzip-model.webp','img/banner-drop.webp','img/hero-orange.webp','img/piped-back.webp','img/tile-footwear.webp','img/halfzip-back.webp','img/tile-couture.webp','img/tee-white.webp','img/hoodie-grey.webp'];
+const LOOK=['img/hero-black.webp','img/halfzip-model.webp','img/banner-drop.webp','img/hero-orange.webp','img/piped-back.webp','img/tile-footwear.webp','img/halfzip-back.webp','img/tile-couture.webp','img/tee-white.webp','img/hoodie-grey.webp','img/film-street.webp','img/sneakers-white.webp'];
 const lt=document.getElementById('ltrack'); const lseq=LOOK.map(x=>`<img src="${x}" alt="Lookbook FS/26" loading="lazy">`).join(''); lt.innerHTML=lseq+lseq;
 
 /* marquee */
@@ -570,7 +637,8 @@ function openPDP(id){
   document.getElementById('pModel').textContent=curP.model;
   document.getElementById('pAdd').textContent='ADD TO CART — '+fmt(curP.price);
   document.getElementById('tabBody').textContent=curP.desc;
-  document.querySelectorAll('#pSizes button').forEach(b=>{b.classList.toggle('on',b.dataset.s==='S'); b.onclick=()=>{curSize=b.dataset.s; document.querySelectorAll('#pSizes button').forEach(x=>x.classList.toggle('on',x===b))}});
+  const szs=curP.sizes||['S','M','L','XL']; curSize=szs[0]; const ps=document.getElementById('pSizes'); ps.innerHTML='';
+  szs.forEach((sz,i)=>{const b=document.createElement('button'); b.textContent=sz; if(!i)b.className='on'; b.onclick=()=>{curSize=sz; ps.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))}; ps.appendChild(b)});
   setGal(0); showOnly('pdp'); scrollTo({top:0});
 }
 function setGal(i){
@@ -630,6 +698,42 @@ function openBag(){document.getElementById('drawer').classList.add('on'); docume
 function closeBag(){document.getElementById('drawer').classList.remove('on'); document.getElementById('scrim').classList.remove('on')}
 function checkout(){ if(!bag.length) return toast('Your bag is empty'); toast('Demo checkout — no payment processed ✓'); bag=[]; renderBag(); closeBag() }
 let toastT; function toast(msg){const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2400)}
+
+/* scroll-film: pinned canvas, lerped scrub over 72 frames */
+(function(){
+  const F=72, cv=document.getElementById('filmCanvas'), ctx=cv.getContext('2d');
+  const wrap=document.getElementById('filmwrap'), prog=document.getElementById('filmProg'), hint=document.querySelector('.filmhint');
+  const caps=[...document.querySelectorAll('.filmcap')];
+  const imgs=[]; let loaded=0;
+  for(let i=1;i<=F;i++){const im=new Image(); im.src='film/f'+String(i).padStart(3,'0')+'.webp'; im.onload=()=>loaded++; imgs.push(im)}
+  function size(){const d=Math.min(devicePixelRatio||1,1.5); cv.width=wrap.clientWidth*d; cv.height=innerHeight*d}
+  size(); addEventListener('resize',size);
+  let shown=0, lastDrawn=-1;
+  function draw(idx){
+    const im=imgs[idx]; if(!im||!im.complete||!im.naturalWidth) return;
+    const cw=cv.width, ch=cv.height, sc=Math.max(cw/im.naturalWidth, ch/im.naturalHeight);
+    const w=im.naturalWidth*sc, h=im.naturalHeight*sc;
+    ctx.drawImage(im,(cw-w)/2,(ch-h)/2,w,h);
+  }
+  function capOpacity(p,i){
+    const seg=1/caps.length, c=p/seg, d=Math.abs(c-(i+0.5));
+    return Math.max(0, 1-d*2.6);
+  }
+  function tick(){
+    const r=wrap.getBoundingClientRect();
+    if(r.bottom>0 && r.top<innerHeight){
+      const p=Math.min(1, Math.max(0, -r.top/(r.height-innerHeight)));
+      shown += (p*(F-1)-shown)*0.11;
+      const idx=Math.round(shown);
+      if(idx!==lastDrawn){ draw(idx); lastDrawn=idx }
+      caps.forEach((c,i)=>{const o=capOpacity(p,i); c.style.opacity=o; c.style.transform='translateY('+( (1-o)*-14 )+'px)'; c.style.pointerEvents=(i===caps.length-1&&o>0.6)?'auto':'none'});
+      prog.style.width=(p*100)+'%';
+      hint.style.opacity = p<0.04 ? 1 : 0;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
 renderBag();
 </script>
 </body>
