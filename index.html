@@ -222,6 +222,30 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
   .banner{aspect-ratio:16/10}
   .statement{padding:56px 20px 4px}
 }
+
+/* v2.1 motion pack */
+.slide.on .model{animation:kb 6.5s ease-out forwards}
+.slide.on .bgimg{animation:kbb 7s ease-out forwards}
+@keyframes kb{from{transform:translate(-38%,-50%) scale(1)}to{transform:translate(-38%,-50%) scale(1.07)}}
+@keyframes kbb{from{transform:scale(1)}to{transform:scale(1.09)}}
+.slide.on .copy{animation:fadeUp .9s .2s cubic-bezier(.19,1,.22,1) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1}}
+.slide.dark.on .copy{animation-name:fadeUpD}
+@keyframes fadeUpD{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.card .ph{position:relative}
+.card .ph img.hov{position:absolute;inset:0;margin:auto;opacity:0;transition:opacity .55s ease,transform .8s cubic-bezier(.19,1,.22,1)}
+.card:hover .ph img.hov{opacity:1}
+#pdp.open{animation:viewIn .55s cubic-bezier(.19,1,.22,1)}
+#coll.open{animation:viewIn .55s cubic-bezier(.19,1,.22,1)}
+@keyframes viewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.pstage img.swap{animation:galIn .5s cubic-bezier(.19,1,.22,1)}
+@keyframes galIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.lookbook{padding:64px 0 6px;overflow:hidden}
+.lookbook h3{text-align:center;font-size:12px;font-weight:800;letter-spacing:.34em;margin-bottom:26px}
+.ltrack{display:flex;gap:14px;width:max-content;animation:mq 46s linear infinite}
+.lookbook:hover .ltrack{animation-play-state:paused}
+.ltrack img{height:330px;width:auto;object-fit:cover;border-radius:2px}
+@media(max-width:900px){.ltrack img{height:230px}}
 </style>
 </head>
 <body>
@@ -325,6 +349,11 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
     <img id="bannerImg" src="img/banner-drop.webp" alt="Drop 02 campaign">
     <div class="bt"><small>FS / 26</small><h2>Drop 02</h2></div>
   </section>
+  <!-- LOOKBOOK -->
+  <section class="lookbook">
+    <h3>LOOKBOOK — FS/26</h3>
+    <div class="ltrack" id="ltrack"></div>
+  </section>
 </main>
 
 <!-- COLLECTION -->
@@ -426,8 +455,10 @@ const PRODUCTS=[
 const COLL_IMG={puffer:'img/puffer-orange.webp',piped:'img/piped-front.webp',halfzip:'img/halfzip-back.webp',knit:'img/knit-iceblue.webp',stitch:'img/stitch-hoodie.webp',mesh:'img/mesh-camo.webp'};
 const fmt=n=>'$'+n.toFixed(2)+' USD';
 
+const HOV={puffer:'img/hero-orange.webp',piped:'img/piped-back.webp',halfzip:'img/halfzip-model.webp'};
 function cardHTML(p,imgSrc){
-  return `<div class="ph"><img src="${imgSrc}" alt="${p.name}" loading="lazy"></div><h3>${p.name}</h3><p class="price">${fmt(p.price)}</p>`;
+  const hov=(imgSrc===p.img&&HOV[p.id])?`<img class="hov" src="${HOV[p.id]}" alt="" loading="lazy">`:'';
+  return `<div class="ph"><img src="${imgSrc}" alt="${p.name}" loading="lazy">${hov}</div><h3>${p.name}</h3><p class="price">${fmt(p.price)}</p>`;
 }
 const grid=document.getElementById('grid');
 PRODUCTS.forEach((p,i)=>{
@@ -439,6 +470,10 @@ PRODUCTS.forEach(p=>{
   const d=document.createElement('div'); d.className='card';
   d.innerHTML=cardHTML(p,COLL_IMG[p.id]); d.onclick=()=>openPDP(p.id); cg.appendChild(d);
 });
+
+/* lookbook */
+const LOOK=['img/hero-black.webp','img/halfzip-model.webp','img/banner-drop.webp','img/hero-orange.webp','img/piped-back.webp','img/tile-footwear.webp','img/halfzip-back.webp','img/tile-couture.webp'];
+const lt=document.getElementById('ltrack'); const lseq=LOOK.map(x=>`<img src="${x}" alt="Lookbook FS/26" loading="lazy">`).join(''); lt.innerHTML=lseq+lseq;
 
 /* marquee */
 const mt=document.getElementById('mtrack');
@@ -486,7 +521,7 @@ function openPDP(id){
 }
 function setGal(i){
   galI=(i+curP.gal.length)%curP.gal.length;
-  document.getElementById('pImg').src=curP.gal[galI];
+  const pi=document.getElementById('pImg'); pi.src=curP.gal[galI]; pi.classList.remove('swap'); void pi.offsetWidth; pi.classList.add('swap');
   const g=document.getElementById('gdots'); g.innerHTML='';
   curP.gal.forEach((_,j)=>{const b=document.createElement('button'); if(j===galI)b.className='on'; b.onclick=()=>setGal(j); g.appendChild(b)});
 }
