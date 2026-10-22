@@ -512,7 +512,6 @@ function fillGrid(el,list,reveal){
 }
 fillGrid(document.getElementById('grid'),PRODUCTS.slice(0,6),true);
 fillGrid(document.getElementById('grid2'),PRODUCTS.slice(6),true);
-document.querySelectorAll('#grid2 .rv').forEach(el=>io.observe(el));
 const cg=document.getElementById('collGrid');
 function renderColl(cat){
   cg.innerHTML='';
