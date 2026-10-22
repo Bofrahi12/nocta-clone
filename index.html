@@ -359,6 +359,9 @@ header{flex-direction:column;align-items:stretch;padding:0}
 
 .card .ph{overflow:hidden}
 .card .ph img{max-width:88%}
+
+.card .ph>img:not(.hov){transition:opacity .45s ease,transform .8s cubic-bezier(.19,1,.22,1)}
+.card:hover .ph>img:not(.hov){opacity:0}
 </style>
 </head>
 <body>
