@@ -246,6 +246,14 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
 .lookbook:hover .ltrack{animation-play-state:paused}
 .ltrack img{height:330px;width:auto;object-fit:cover;border-radius:2px}
 @media(max-width:900px){.ltrack img{height:230px}}
+
+/* v2.2 PDP zoom (from reel 2) */
+.pstage{overflow:hidden}
+.pstage.zoomable{cursor:zoom-in}
+.pstage.zooming{cursor:zoom-out}
+.pstage #pImg{transition:transform .3s ease}
+.pstage.zooming #pImg{transform:scale(2.25)}
+.pstage .zhint{position:absolute;top:8px;right:12px;font-size:10.5px;font-weight:700;letter-spacing:.22em;color:#b9b9b9;pointer-events:none}
 </style>
 </head>
 <body>
@@ -374,7 +382,7 @@ footer{margin-top:70px;border-top:1px solid var(--line);padding:52px 34px 30px}
       <p class="modeline" id="pModel"></p>
     </div>
     <div class="pstage">
-      <img id="pImg" src="" alt="">
+      <img id="pImg" src="" alt=""><span class="zhint">HOVER TO ZOOM</span>
       <button class="garrow" onclick="galGo(1)">›</button>
       <div class="gdots" id="gdots"></div>
     </div>
@@ -526,6 +534,17 @@ function setGal(i){
   curP.gal.forEach((_,j)=>{const b=document.createElement('button'); if(j===galI)b.className='on'; b.onclick=()=>setGal(j); g.appendChild(b)});
 }
 function galGo(d){setGal(galI+d)}
+/* PDP magnifier zoom — follows the cursor, tap toggles on touch */
+const pstage=document.querySelector('.pstage'), pimg=document.getElementById('pImg');
+function zoomOrigin(e){const r=pimg.getBoundingClientRect(); const x=Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100)); const y=Math.min(100,Math.max(0,(e.clientY-r.top)/r.height*100)); pimg.style.transformOrigin=x+'% '+y+'%'}
+if(matchMedia('(hover:hover)').matches){
+  pstage.classList.add('zoomable');
+  pstage.addEventListener('mousemove',e=>{zoomOrigin(e); pstage.classList.add('zooming')});
+  pstage.addEventListener('mouseleave',()=>pstage.classList.remove('zooming'));
+} else {
+  pstage.addEventListener('click',e=>{ if(e.target.closest('.garrow')||e.target.closest('.gdots'))return; zoomOrigin(e); pstage.classList.toggle('zooming') });
+}
+const _setGal=setGal; setGal=function(i){ pstage.classList.remove('zooming'); _setGal(i) };
 function chQtyPDP(d){curQty=Math.max(1,curQty+d); document.getElementById('pQty').textContent=curQty}
 function closePDP(){ showOnly('home') }
 function tabGo(btn,kind){
