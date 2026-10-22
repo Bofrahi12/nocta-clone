@@ -542,7 +542,9 @@ if(matchMedia('(hover:hover)').matches){
   pstage.addEventListener('mousemove',e=>{zoomOrigin(e); pstage.classList.add('zooming')});
   pstage.addEventListener('mouseleave',()=>pstage.classList.remove('zooming'));
 } else {
+  document.querySelector('.zhint').textContent='TAP TO ZOOM';
   pstage.addEventListener('click',e=>{ if(e.target.closest('.garrow')||e.target.closest('.gdots'))return; zoomOrigin(e); pstage.classList.toggle('zooming') });
+  pstage.addEventListener('touchmove',e=>{ if(pstage.classList.contains('zooming')) zoomOrigin(e.touches[0]) },{passive:true});
 }
 const _setGal=setGal; setGal=function(i){ pstage.classList.remove('zooming'); _setGal(i) };
 function chQtyPDP(d){curQty=Math.max(1,curQty+d); document.getElementById('pQty').textContent=curQty}
