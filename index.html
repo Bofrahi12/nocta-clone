@@ -569,7 +569,7 @@ footer .paychips span{border-color:#333;color:#9a9a9a}
       <button class="fadd" onclick="featAdd()">ADD TO CART — $84.00 USD</button>
       <span class="fview" onclick="openPDP('waveolive')">View the piece →</span>
     </div>
-    <div class="fimg"><img src="img/wave-hoodie-olive.webp" alt="Wave Panel Hoodie Olive"></div>
+    <div class="fimg"><img src="img/hd/wave-hoodie-olive.webp" alt="Wave Panel Hoodie Olive"></div>
   </section>
 
   <!-- MARQUEE -->
@@ -587,7 +587,7 @@ footer .paychips span{border-color:#333;color:#9a9a9a}
   </section>
   <!-- THE BRAND -->
   <section class="story rv">
-    <div class="simg"><img src="img/film-street.webp" alt="BOUFRAHI — the brand"></div>
+    <div class="simg"><img src="img/campaign-night.webp" alt="BOUFRAHI — the brand"></div>
     <div class="stext">
       <small>THE BRAND</small>
       <h2>Built after<br>midnight.</h2>
@@ -614,7 +614,7 @@ footer .paychips span{border-color:#333;color:#9a9a9a}
     <p>Tag #BOUFRAHIWORLDWIDE to be featured.</p>
     <div class="iggrid">
       <div><img src="img/hero-dark.webp" alt="Community look"></div>
-      <div><img src="img/film-street.webp" alt="Community look"></div>
+      <div><img src="img/campaign-portrait.webp" alt="Community look"></div>
       <div><img src="img/hero-orange.webp" alt="Community look"></div>
       <div><img src="img/film-sneaker.webp" alt="Community look"></div>
       <div><img src="img/halfzip-model.webp" alt="Community look"></div>
@@ -855,6 +855,9 @@ function filterColl(btn,cat){
   document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b===btn)); renderColl(cat);
 }
 
+/* PDP galleries use the HD tier */
+PRODUCTS.forEach(p=>{ p.gal=p.gal.map(g=>g.replace('img/','img/hd/')) });
+
 /* giant type band */
 const bt=document.getElementById('btrack');
 const bseq='<span>Boufrahi — FS/26 — </span><span class="fill">Boufrahi — FS/26 — </span>';
@@ -865,7 +868,7 @@ document.querySelectorAll('#fSizes button').forEach(b=>b.onclick=()=>{featSize=b
 function featAdd(){ addItem(PRODUCTS.find(p=>p.id==='waveolive'), featSize, 1) }
 
 /* lookbook */
-const LOOK=['img/hero-black.webp','img/halfzip-model.webp','img/banner-drop.webp','img/hero-orange.webp','img/piped-back.webp','img/tile-footwear.webp','img/halfzip-back.webp','img/tile-couture.webp','img/tee-white.webp','img/hoodie-grey.webp','img/film-street.webp','img/sneakers-white.webp'];
+const LOOK=['img/campaign-portrait.webp','img/campaign-night.webp','img/hero-black.webp','img/halfzip-model.webp','img/banner-drop.webp','img/hero-orange.webp','img/piped-back.webp','img/tile-footwear.webp','img/halfzip-back.webp','img/tile-couture.webp','img/tee-white.webp','img/hoodie-grey.webp','img/film-street.webp','img/sneakers-white.webp'];
 const lt=document.getElementById('ltrack'); lt.innerHTML=LOOK.map(x=>`<img src="${x}" alt="Lookbook FS/26" loading="lazy" draggable="false">`).join('');
 let dragOn=false,dragX=0,dragL=0;
 lt.addEventListener('pointerdown',e=>{dragOn=true;dragX=e.clientX;dragL=lt.scrollLeft;lt.classList.add('grabbing')});
