@@ -878,7 +878,7 @@ const seq=PRODUCTS.map(p=>`<div class="mi"><img src="${p.img}">${p.name}<span>${
 mt.innerHTML=seq+seq;
 
 /* entry screen */
-setTimeout(()=>document.getElementById('entry').classList.add('off'),1250);
+setTimeout(()=>document.getElementById('entry').classList.add('off'),550);
 document.getElementById('entry').addEventListener('click',()=>document.getElementById('entry').classList.add('off'));
 
 /* hero slider */
@@ -978,7 +978,9 @@ let toastT; function toast(msg){const t=document.getElementById('toast'); t.text
   const wrap=document.getElementById('filmwrap'), prog=document.getElementById('filmProg'), hint=document.querySelector('.filmhint');
   const caps=[...document.querySelectorAll('.filmcap')];
   const imgs=[]; let loaded=0;
-  for(let i=1;i<=F;i++){const im=new Image(); im.src='film/f'+String(i).padStart(3,'0')+'.webp'; im.onload=()=>loaded++; imgs.push(im)}
+  function loadFrame(i){const im=new Image(); im.src='film/f'+String(i).padStart(3,'0')+'.webp'; im.onload=()=>loaded++; imgs[i-1]=im}
+  for(let i=1;i<=Math.min(14,F);i++) loadFrame(i);
+  addEventListener('load',()=>{let i=15; const step=()=>{const end=Math.min(i+11,F); for(;i<=end;i++) loadFrame(i); if(i<=F) setTimeout(step,120)}; setTimeout(step,150)});
   function size(){const d=Math.min(devicePixelRatio||1,1.5); cv.width=wrap.clientWidth*d; cv.height=innerHeight*d}
   size(); addEventListener('resize',size);
   let shown=0, lastDrawn=-1;
