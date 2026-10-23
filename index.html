@@ -362,6 +362,63 @@ header{flex-direction:column;align-items:stretch;padding:0}
 
 .card .ph>img:not(.hov){transition:opacity .45s ease,transform .8s cubic-bezier(.19,1,.22,1)}
 .card:hover .ph>img:not(.hov){opacity:0}
+
+/* v6 FLAGSHIP art direction */
+.bigmarq{overflow:hidden;background:#fff;padding:26px 0 6px;border-bottom:1px solid var(--line)}
+.bigmarq .btrack{display:flex;width:max-content;animation:mq 26s linear infinite}
+.bigmarq span{font-weight:900;font-size:clamp(64px,11vw,168px);line-height:.92;letter-spacing:-.02em;text-transform:uppercase;white-space:nowrap;padding-right:48px;color:transparent;-webkit-text-stroke:2px #0a0a0a}
+.bigmarq span.fill{color:#0a0a0a;-webkit-text-stroke:2px #0a0a0a}
+.statement{padding:110px 24px 90px}
+.statement p{font-size:clamp(26px,4.2vw,52px);line-height:1.35;max-width:1000px}
+.shopsec{padding:84px 0 30px}
+.shopsec.grey{background:#f1f1ef}
+.shopsec.dark{background:#0a0a0a;color:#fff}
+.shophead{max-width:1220px;margin:0 auto;padding:0 34px;display:flex;align-items:baseline;gap:22px}
+.shophead .idx{font-size:13px;font-weight:800;letter-spacing:.3em;color:#b5b5b5}
+.shopsec.dark .idx{color:#555}
+.shophead h2{font-size:clamp(38px,5.6vw,72px);font-weight:900;text-transform:uppercase;letter-spacing:-.02em;line-height:1}
+.shophead .cnt{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:.24em;color:#999}
+.shopsec .grid{padding-top:40px}
+.shopsec.dark .card h3{color:#fff}
+.shopsec.dark .card .price{color:#8a8a8a}
+.shopsec.dark .ptag{background:#fff;color:#0a0a0a}
+.shopsec.dark .wish{color:#777}
+.shopsec.dark .wish.on{color:#e0245e}
+.featured{background:#0a0a0a;color:#fff;display:grid;grid-template-columns:1.05fr 1fr;margin:6px;overflow:hidden}
+.featured .fimg{background:#fff;display:grid;place-items:center;min-height:420px}
+.featured .fimg img{max-height:560px;object-fit:contain}
+.featured .ftext{display:flex;flex-direction:column;justify-content:center;padding:64px 58px}
+.featured small{font-size:11px;font-weight:700;letter-spacing:.34em;color:#8a8a8a;margin-bottom:16px}
+.featured h2{font-weight:900;font-size:clamp(34px,4.6vw,64px);text-transform:uppercase;line-height:.98;letter-spacing:-.02em;margin-bottom:16px}
+.featured .fdesc{color:#bdbdbd;font-size:14.5px;line-height:1.8;max-width:430px;margin-bottom:22px}
+.featured .fprice{font-size:20px;font-weight:800;margin-bottom:24px}
+.featured .fsizes{display:flex;gap:8px;margin-bottom:26px}
+.featured .fsizes button{border:1.5px solid #3a3a3a;color:#fff;font-size:13px;font-weight:700;padding:9px 15px;transition:.2s;background:transparent}
+.featured .fsizes button.on{background:#fff;color:#0a0a0a;border-color:#fff}
+.featured .fadd{background:#fff;color:#0a0a0a;border-radius:999px;padding:16px 34px;font-size:12.5px;font-weight:800;letter-spacing:.1em;align-self:flex-start;transition:.25s}
+.featured .fadd:hover{transform:translateY(-2px)}
+.featured .fview{margin-top:16px;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:#ccc;align-self:flex-start}
+.lookbook{padding:70px 0 10px}
+.lookscroll{display:flex;gap:14px;overflow-x:auto;padding:6px 34px 18px;scroll-snap-type:x mandatory;cursor:grab;scrollbar-width:none}
+.lookscroll::-webkit-scrollbar{display:none}
+.lookscroll.grabbing{cursor:grabbing}
+.lookscroll img{height:400px;width:auto;object-fit:cover;scroll-snap-align:start;user-select:none;-webkit-user-drag:none;border-radius:2px}
+footer{background:#0a0a0a;color:#fff;margin-top:80px;border-top:none}
+footer .fgrid h4{color:#fff}
+footer .fgrid li{color:#9a9a9a}
+footer .fgrid li a:hover{color:#fff}
+footer .fbot{border-top:1px solid #262626;color:#777}
+footer .demo-note{color:#555}
+footer .paychips span{border-color:#333;color:#9a9a9a}
+.footbig{font-weight:900;font-size:clamp(60px,12.5vw,190px);line-height:.85;letter-spacing:-.02em;text-transform:uppercase;text-align:center;color:transparent;-webkit-text-stroke:2px #2e2e2e;padding:34px 10px 6px;user-select:none}
+@media(max-width:900px){
+  .featured{grid-template-columns:1fr}
+  .featured .ftext{padding:40px 24px}
+  .featured .fimg{min-height:300px}
+  .lookscroll img{height:280px}
+  .shophead{padding:0 18px}
+  .shopsec{padding:56px 0 16px}
+}
 </style>
 </head>
 <body>
@@ -427,6 +484,9 @@ header{flex-direction:column;align-items:stretch;padding:0}
     </div>
   </section>
 
+  <!-- GIANT TYPE BAND -->
+  <div class="bigmarq"><div class="btrack" id="btrack"></div></div>
+
   <!-- HERO -->
   <section class="hero" id="hero">
     <div class="slide dark on">
@@ -481,16 +541,36 @@ header{flex-direction:column;align-items:stretch;padding:0}
   </section>
 
   <!-- DROP 02 -->
-  <div class="drophead" id="drop"><h2>Drop 02</h2></div>
-  <section class="grid" id="grid"></section>
+  <section class="shopsec">
+    <div class="shophead" id="drop"><span class="idx">01</span><h2>Drop 02</h2><span class="cnt">06 PIECES</span></div>
+    <section class="grid" id="grid"></section>
+  </section>
 
   <!-- ESSENTIALS -->
-  <div class="drophead"><h2>The Essentials</h2></div>
-  <section class="grid" id="grid2"></section>
+  <section class="shopsec grey">
+    <div class="shophead"><span class="idx">02</span><h2>The Essentials</h2><span class="cnt">06 PIECES</span></div>
+    <section class="grid" id="grid2"></section>
+  </section>
 
   <!-- TRENDING NOW -->
-  <div class="drophead"><h2>Trending Now</h2></div>
-  <section class="grid" id="grid3"></section>
+  <section class="shopsec dark">
+    <div class="shophead"><span class="idx">03</span><h2>Trending Now</h2><span class="cnt">16 PIECES</span></div>
+    <section class="grid" id="grid3"></section>
+  </section>
+
+  <!-- FEATURED PIECE -->
+  <section class="featured rv">
+    <div class="ftext">
+      <small>FEATURED PIECE — FS/26</small>
+      <h2>Wave Panel<br>Hoodie Olive</h2>
+      <p class="fdesc">The signature of the season: sweeping curved panels in black and olive, cut oversized from heavyweight fleece. Designed after midnight, gone when the run ends.</p>
+      <p class="fprice">$84.00 USD</p>
+      <div class="fsizes" id="fSizes"><button class="on">S</button><button>M</button><button>L</button><button>XL</button></div>
+      <button class="fadd" onclick="featAdd()">ADD TO CART — $84.00 USD</button>
+      <span class="fview" onclick="openPDP('waveolive')">View the piece →</span>
+    </div>
+    <div class="fimg"><img src="img/wave-hoodie-olive.webp" alt="Wave Panel Hoodie Olive"></div>
+  </section>
 
   <!-- MARQUEE -->
   <div class="marquee"><div class="mtrack" id="mtrack"></div></div>
@@ -502,8 +582,8 @@ header{flex-direction:column;align-items:stretch;padding:0}
   </section>
   <!-- LOOKBOOK -->
   <section class="lookbook">
-    <h3>LOOKBOOK — FS/26</h3>
-    <div class="ltrack" id="ltrack"></div>
+    <h3>LOOKBOOK — FS/26 · DRAG →</h3>
+    <div class="lookscroll" id="ltrack"></div>
   </section>
   <!-- THE BRAND -->
   <section class="story rv">
@@ -636,6 +716,7 @@ header{flex-direction:column;align-items:stretch;padding:0}
     <div><h4>COMPANY</h4><ul><li><a href="#">About</a></li><li><a href="#">Stores</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul></div>
     <div><h4>SOCIAL</h4><ul><li><a href="#">Instagram</a></li><li><a href="#">TikTok</a></li><li><a href="#">X</a></li><li><a href="#">YouTube</a></li></ul></div>
   </div>
+  <div class="footbig">Boufrahi</div>
   <div class="fbot"><span>© 2026 BOUFRAHI — FS/26</span><span class="paychips"><span>VISA</span><span>MASTERCARD</span><span>AMEX</span><span>PAYPAL</span><span>APPLE PAY</span></span><span>Terms · Privacy · Cookies</span></div>
   <p class="demo-note">Concept demo built by VERTEX WEB — design replica for demonstration only. All product imagery is AI-generated placeholder photography; brand and products are placeholders to be swapped before any commercial use.</p>
 </footer>
@@ -774,9 +855,22 @@ function filterColl(btn,cat){
   document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b===btn)); renderColl(cat);
 }
 
+/* giant type band */
+const bt=document.getElementById('btrack');
+const bseq='<span>Boufrahi — FS/26 — </span><span class="fill">Boufrahi — FS/26 — </span>';
+bt.innerHTML=bseq+bseq;
+/* featured piece */
+let featSize='S';
+document.querySelectorAll('#fSizes button').forEach(b=>b.onclick=()=>{featSize=b.textContent; document.querySelectorAll('#fSizes button').forEach(x=>x.classList.toggle('on',x===b))});
+function featAdd(){ addItem(PRODUCTS.find(p=>p.id==='waveolive'), featSize, 1) }
+
 /* lookbook */
 const LOOK=['img/hero-black.webp','img/halfzip-model.webp','img/banner-drop.webp','img/hero-orange.webp','img/piped-back.webp','img/tile-footwear.webp','img/halfzip-back.webp','img/tile-couture.webp','img/tee-white.webp','img/hoodie-grey.webp','img/film-street.webp','img/sneakers-white.webp'];
-const lt=document.getElementById('ltrack'); const lseq=LOOK.map(x=>`<img src="${x}" alt="Lookbook FS/26" loading="lazy">`).join(''); lt.innerHTML=lseq+lseq;
+const lt=document.getElementById('ltrack'); lt.innerHTML=LOOK.map(x=>`<img src="${x}" alt="Lookbook FS/26" loading="lazy" draggable="false">`).join('');
+let dragOn=false,dragX=0,dragL=0;
+lt.addEventListener('pointerdown',e=>{dragOn=true;dragX=e.clientX;dragL=lt.scrollLeft;lt.classList.add('grabbing')});
+addEventListener('pointermove',e=>{if(dragOn) lt.scrollLeft=dragL-(e.clientX-dragX)});
+addEventListener('pointerup',()=>{dragOn=false;lt.classList.remove('grabbing')});
 
 /* marquee */
 const mt=document.getElementById('mtrack');
