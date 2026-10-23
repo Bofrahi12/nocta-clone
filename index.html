@@ -513,7 +513,7 @@ header{flex-direction:column;align-items:stretch;padding:0}
       <h2>Built after<br>midnight.</h2>
       <p>BOUFRAHI is an independent streetwear label designed for the hours nobody sees — the night shift, the last train, the city when it finally goes quiet. Every piece is released in a limited run, numbered by drop, and never restocked.</p>
       <div class="stats">
-        <div><b>24</b><span>PIECES — FS/26</span></div>
+        <div><b>28</b><span>PIECES — FS/26</span></div>
         <div><b>8</b><span>CATEGORIES</span></div>
         <div><b>02</b><span>DROPS A YEAR</span></div>
       </div>
@@ -727,9 +727,21 @@ const PRODUCTS=[
   specs:[['Fit','one size, deep'],['Fabric','ribbed acrylic knit'],['Details','embroidered star on cuff'],['Cuff','folded, double layer'],['Finish','stretch recovery knit']], model:'One size fits all.'},
  {id:'crossbody', tag:'NEW', cat:'Accessories', name:'Crossbody Bag Black', price:46, sizes:['One Size'], img:'img/crossbody-bag.webp', gal:['img/crossbody-bag.webp'],
   desc:'Compact black crossbody bag with an adjustable strap, a front zip pocket and a small silver star patch. Phone, wallet, keys — nothing else needed.',
-  specs:[['Fit','one size, adjustable strap'],['Shell','matte technical nylon'],['Details','front zip pocket, star patch'],['Strap','adjustable webbing'],['Lining','branded interior lining']], model:'One size fits all.'}
+  specs:[['Fit','one size, adjustable strap'],['Shell','matte technical nylon'],['Details','front zip pocket, star patch'],['Strap','adjustable webbing'],['Lining','branded interior lining']], model:'One size fits all.'},
+ {id:'waveolive', tag:'NEW', cat:'Hoodies', name:'Wave Panel Hoodie Olive', price:84, img:'img/wave-hoodie-olive.webp', gal:['img/wave-hoodie-olive.webp'],
+  desc:'Oversized hoodie in black and olive with large sweeping curved panels that flow from the shoulders down the sleeves and body. Heavyweight fleece, kangaroo pocket and a double-layer hood.',
+  specs:[['Fit','oversized, dropped shoulder'],['Fabric','heavyweight brushed cotton fleece'],['Details','curved colour-block panels, kangaroo pocket'],['Hood','double layer with drawcords'],['Finish','ribbed cuffs and hem']], model:'Model is 1.90 m and wears size M.'},
+ {id:'waveblue', tag:'NEW', cat:'Hoodies', name:'Wave Panel Hoodie Royal', price:84, img:'img/wave-hoodie-blue.webp', gal:['img/wave-hoodie-blue.webp'],
+  desc:'Oversized hoodie in royal blue with bold white wave panels curling down the sleeves and across the body. Heavyweight fleece with a kangaroo pocket and drawcord hood.',
+  specs:[['Fit','oversized, dropped shoulder'],['Fabric','heavyweight brushed cotton fleece'],['Details','wave colour-block panels, kangaroo pocket'],['Hood','double layer with drawcords'],['Finish','ribbed cuffs and hem']], model:'Model is 1.90 m and wears size M.'},
+ {id:'waveice', tag:'NEW', cat:'Hoodies', name:'Wave Panel Hoodie Ice', price:84, img:'img/wave-hoodie-ice.webp', gal:['img/wave-hoodie-ice.webp'],
+  desc:'Oversized black hoodie with pale ice-blue wave panels flowing down the sleeves and rising from the hem. Heavyweight fleece, kangaroo pocket and a double-layer hood.',
+  specs:[['Fit','oversized, dropped shoulder'],['Fabric','heavyweight brushed cotton fleece'],['Details','wave colour-block panels, kangaroo pocket'],['Hood','double layer with drawcords'],['Finish','ribbed cuffs and hem']], model:'Model is 1.90 m and wears size M.'},
+ {id:'panelpants', tag:'NEW', cat:'Bottoms', name:'Panel Track Pants Olive', price:62, img:'img/panel-pants-olive.webp', gal:['img/panel-pants-olive.webp'],
+  desc:'Wide-leg track pants in black and olive with sweeping curved panels down the legs — the matching bottom to the Wave Panel Hoodie. Elastic drawstring waist and cuffed ankles.',
+  specs:[['Fit','wide leg, regular rise'],['Fabric','heavyweight cotton fleece'],['Details','curved colour-block panels, drawstring waist'],['Cuffs','elastic ankle cuffs'],['Pockets','two side pockets']], model:'Model is 1.90 m and wears size M.'}
 ];
-const COLL_IMG={puffer:'img/puffer-orange.webp',piped:'img/piped-front.webp',halfzip:'img/halfzip-back.webp',knit:'img/knit-iceblue.webp',stitch:'img/stitch-hoodie.webp',mesh:'img/mesh-camo.webp',pufferblack:'img/puffer-black.webp',bomber:'img/bomber-olive.webp',hoodiegrey:'img/hoodie-grey.webp',tee:'img/tee-white.webp',cargo:'img/cargo-black.webp',cap:'img/cap-black.webp',sneakerswhite:'img/sneakers-white.webp',sneakersblack:'img/sneakers-black.webp',denim:'img/denim-jacket.webp',varsity:'img/varsity-jacket.webp',windbreaker:'img/windbreaker.webp',vest:'img/puffer-vest.webp',flannel:'img/flannel-shirt.webp',trackpants:'img/track-pants.webp',shorts:'img/shorts-black.webp',knitsweater:'img/knit-sweater.webp',beanie:'img/beanie-black.webp',crossbody:'img/crossbody-bag.webp'};
+const COLL_IMG={puffer:'img/puffer-orange.webp',piped:'img/piped-front.webp',halfzip:'img/halfzip-back.webp',knit:'img/knit-iceblue.webp',stitch:'img/stitch-hoodie.webp',mesh:'img/mesh-camo.webp',pufferblack:'img/puffer-black.webp',bomber:'img/bomber-olive.webp',hoodiegrey:'img/hoodie-grey.webp',tee:'img/tee-white.webp',cargo:'img/cargo-black.webp',cap:'img/cap-black.webp',sneakerswhite:'img/sneakers-white.webp',sneakersblack:'img/sneakers-black.webp',denim:'img/denim-jacket.webp',varsity:'img/varsity-jacket.webp',windbreaker:'img/windbreaker.webp',vest:'img/puffer-vest.webp',flannel:'img/flannel-shirt.webp',trackpants:'img/track-pants.webp',shorts:'img/shorts-black.webp',knitsweater:'img/knit-sweater.webp',beanie:'img/beanie-black.webp',crossbody:'img/crossbody-bag.webp',waveolive:'img/wave-hoodie-olive.webp',waveblue:'img/wave-hoodie-blue.webp',waveice:'img/wave-hoodie-ice.webp',panelpants:'img/panel-pants-olive.webp'};
 const fmt=n=>'$'+n.toFixed(2)+' USD';
 
 const HOV={puffer:'img/hero-orange.webp',piped:'img/piped-back.webp',halfzip:'img/halfzip-model.webp'};
