@@ -150,21 +150,29 @@ if(qs.get('garment')){ $('liveGarment').value=qs.get('garment'); const li=$('liv
 $('liveGarment').addEventListener('change',()=>{ const u=$('liveGarment').value.trim(); const li=$('liveGarmentImg'); if(u){ li.src=u; li.classList.remove('hidden'); } });
 $('liveBtn').addEventListener('click', async ()=>{
   const key=$('decartKey').value.trim(); const ls=$('liveStatus');
-  if(!key){ ls.textContent='Paste the store Decart API key first.'; return; }
+  if(!key){ ls.textContent='Step 0/4 — Paste the store Decart API key first.'; return; }
   localStorage.setItem('vtx_decart_key',key);
-  ls.textContent='Starting camera…';
+  const btn=$('liveBtn'); btn.disabled=true;
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-    const sdk=await import('https://esm.run/@decart/sdk');
-    const client=sdk.createClient({apiKey:key});
+    ls.textContent='Step 1/4 — Loading the Decart engine…';
+    const sdk=await import('https://esm.run/@decartai/sdk@0.2.14');
+    ls.textContent='Step 2/4 — Preparing a session token…';
+    let auth=key;
+    try{
+      const tr=await fetch('https://api.decart.ai/v1/client/tokens',{method:'POST',headers:{'X-API-KEY':key}});
+      if(tr.ok){ const tj=await tr.json(); if(tj.apiKey) auth=tj.apiKey; }
+    }catch(e){ /* direct key fallback */ }
+    ls.textContent='Step 3/4 — Starting your camera…';
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
+    ls.textContent='Step 4/4 — Connecting to Lucy (live)…';
+    const client=sdk.createDecartClient({apiKey:auth});
     const model=sdk.models.realtime('lucy-vton-latest');
-    let garm=null; const gu=$('liveGarment').value.trim();
-    if(gu){ const r=await fetch(gu); garm=await r.blob(); }
-    await client.realtime.connect(stream,{model,
-      prompt:'Substitute the outfit of the person with the garment from the reference image',
-      image:garm||undefined,
+    const gu=$('liveGarment').value.trim();
+    await client.realtime.connect(stream,{model, mirror:'auto',
+      initialState:{ prompt:{text:'Replace the outfit of the person with the garment from the reference image, keeping the person, face and background unchanged'}, image: gu||undefined },
       onRemoteStream:(s)=>{ const v=$('liveVideo'); v.srcObject=s; v.classList.remove('hidden'); ls.textContent='Live ✦ Move — the garment follows you.'; }});
-  }catch(err){ ls.textContent='Live session could not start: '+(err.message||err)+' — check the key, its credits, and camera permission.'; }
+  }catch(err){ ls.textContent='Live session could not start: '+((err&&err.code?err.code+': ':'')+(err&&err.message||err)); }
+  btn.disabled=false;
 });
 </script>
 </body>
