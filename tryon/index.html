@@ -1,74 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VERTEX Try-On — AI Fitting Room for any store</title>
-<meta name="description" content="One line of code adds an AI fitting room to any clothing store. Shoppers try garments on their own photo — free photo engine, optional live video.">
+<title>VERTEX Try-On — غرفة قياس ذكية لمتجرك | AI Fitting Room</title>
+<meta name="description" content="غرفة قياس بالذكاء الاصطناعي كتركب في أي متجر ملابس بسطر واحد. الزبون كيقيس القطعة على صورتو ولا مباشرة بالكاميرا. AI virtual try-on for any clothing store — one line of code.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VERTEX Try-On","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"AI virtual fitting room widget for clothing stores: photo try-on and live camera try-on, installed with one line of code.","offers":{"@type":"Offer","priceSpecification":{"@type":"PriceSpecification","description":"Installation by VERTEX WEB; live engine usage billed per second on the store's own Decart account ($0.02/sec)."}},"provider":{"@type":"Organization","name":"VERTEX WEB","telephone":"+212693981822"}}
+</script>
 <style>
-:root{--ink:#0a0a0a;--gold:#c9a24b}
+:root{--ink:#0a0a0a;--gold:#c9a24b;--gold2:#e8cf8f;--bg:#f7f6f3;--line:#e7e4dc;--mut:#5c5c58}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,Arial,sans-serif;color:var(--ink)}
-header{background:var(--ink);color:#fff;padding:64px 20px 52px;text-align:center}
-header h1{font-size:clamp(30px,6vw,52px);letter-spacing:-.01em}
-header h1 span{color:var(--gold)}
-header p{color:#bbb;max-width:560px;margin:16px auto 26px;line-height:1.7;font-size:16px}
-.cta{display:inline-block;background:var(--gold);color:#0a0a0a;font-weight:800;padding:14px 26px;border-radius:999px;text-decoration:none}
-main{max-width:920px;margin:0 auto;padding:36px 18px 60px}
-h2{font-size:22px;margin:34px 0 14px}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,'Segoe UI',Arial,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:inherit}
+header.top{position:sticky;top:0;z-index:50;background:rgba(10,10,10,.96);color:#fff;backdrop-filter:blur(6px)}
+.top-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:13px 18px}
+.logo{font-weight:900;letter-spacing:.12em;font-size:16px;white-space:nowrap}
+.logo span{color:var(--gold)}
+nav.main{display:flex;gap:16px;margin-inline-start:auto;font-size:13.5px;font-weight:600}
+nav.main a{text-decoration:none;color:#ddd}
+nav.main a:hover{color:var(--gold2)}
+@media(max-width:720px){nav.main{display:none}}
+.lang{background:none;border:1px solid #444;color:#fff;border-radius:999px;padding:6px 13px;font-weight:800;cursor:pointer;font-size:12.5px}
+.wa-cta{background:var(--gold);color:#0a0a0a!important;padding:8px 15px;border-radius:999px;font-weight:800;text-decoration:none;font-size:13px;white-space:nowrap}
+.hero{background:radial-gradient(1100px 480px at 70% -10%,#2a2416 0%,transparent 60%),var(--ink);color:#fff;padding:64px 18px 54px;text-align:center}
+.hero h1{font-size:clamp(30px,6vw,54px);line-height:1.25;letter-spacing:-.01em}
+.hero h1 span{color:var(--gold)}
+.hero p{color:#c9c9c4;max-width:640px;margin:18px auto 28px;line-height:1.9;font-size:16.5px}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:15px 28px;border-radius:999px;font-weight:800;text-decoration:none;font-size:15px}
+.btn.gold{background:var(--gold);color:#0a0a0a}
+.btn.ghost{border:1.5px solid #555;color:#fff}
+.hero .proofline{margin-top:20px;font-size:13px;color:#9a9a94}
+main{max-width:1080px;margin:0 auto;padding:10px 18px 70px}
+section{padding:44px 0 8px}
+h2{font-size:clamp(22px,3.6vw,30px);margin-bottom:8px}
+.sub{color:var(--mut);line-height:1.9;max-width:680px;margin-bottom:22px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-.grid figure{background:#f4f4f2;border-radius:14px;overflow:hidden}
+.grid figure{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .grid img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
-.grid figcaption{padding:10px 12px;font-size:13.5px;font-weight:700}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.step{border:1px solid #e6e6e6;border-radius:14px;padding:18px}
-.step b{display:block;margin-bottom:8px}
-.step p{color:#555;font-size:14px;line-height:1.65}
-code.box{display:block;background:#0d1117;color:#d6e7ff;padding:16px;border-radius:12px;font-size:13px;overflow-x:auto;white-space:nowrap;margin:10px 0}
-button.copy{background:var(--ink);color:#fff;border:none;padding:11px 20px;border-radius:999px;font-weight:800;cursor:pointer}
-.note{color:#777;font-size:13px;line-height:1.7;margin-top:12px}
-footer{background:var(--ink);color:#999;text-align:center;padding:26px;font-size:13px}
+.grid figcaption{padding:11px 13px;font-size:13.5px;font-weight:700}
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;max-width:760px}
+.ba figure{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;text-align:center}
+.ba img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.ba figcaption{padding:10px;font-weight:800;font-size:13.5px}
+.arrow{font-size:30px;color:var(--gold);font-weight:900}
+html[dir=ltr] .arrow{transform:scaleX(-1)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.card h3{font-size:16.5px;margin-bottom:9px}
+.card p{color:var(--mut);font-size:14.5px;line-height:1.85}
+.card .tag{display:inline-block;background:#0a0a0a;color:var(--gold2);font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:999px;margin-bottom:12px;letter-spacing:.06em}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.step{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.step b.n{display:flex;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--gold);align-items:center;justify-content:center;font-size:16px;margin-bottom:12px}
+.step p{color:var(--mut);font-size:14.5px;line-height:1.85}
+code.box{display:block;background:#0d1117;color:#d6e7ff;padding:16px;border-radius:12px;font-size:13px;overflow-x:auto;white-space:nowrap;margin:14px 0;direction:ltr;text-align:left}
+button.copy{background:var(--ink);color:#fff;border:none;padding:12px 22px;border-radius:999px;font-weight:800;cursor:pointer;font-size:14px}
+details{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:10px}
+details summary{font-weight:800;cursor:pointer;font-size:15px}
+details p{color:var(--mut);line-height:1.9;margin-top:9px;font-size:14.5px}
+.cta-band{background:var(--ink);color:#fff;border-radius:20px;padding:36px 26px;text-align:center;margin-top:46px}
+.cta-band h2{color:#fff}
+.cta-band p{color:#bbb;line-height:1.9;max-width:560px;margin:10px auto 22px}
+footer{background:var(--ink);color:#8f8f8a;text-align:center;padding:28px 16px;font-size:13px;line-height:2}
+footer b{color:#fff}
+.note{color:var(--mut);font-size:13px;line-height:1.8;margin-top:12px}
 </style>
 </head>
 <body>
-<header>
-  <h1>VERTEX <span>TRY-ON</span></h1>
-  <p>An AI fitting room for any clothing store. Your shoppers open a product, tap <b>Try-On</b>, and see it on themselves. One line of code — hosted free, on your own store.</p>
-  <a class="cta" href="tryon.html">Open the fitting room →</a>
-</header>
+<header class="top"><div class="top-in">
+  <div class="logo">VERTEX <span>TRY-ON</span></div>
+  <nav class="main">
+    <a href="#demo" data-ar="الديمو" data-fr="Démo">الديمو</a>
+    <a href="#proof" data-ar="نتيجة حقيقية" data-fr="Résultat réel">نتيجة حقيقية</a>
+    <a href="#how" data-ar="كيفاش كتركب" data-fr="Installation">كيفاش كتركب</a>
+    <a href="#engines" data-ar="المحركات" data-fr="Moteurs">المحركات</a>
+    <a href="#faq" data-ar="أسئلة" data-fr="FAQ">أسئلة</a>
+  </nav>
+  <button class="lang" id="langBtn">FR</button>
+  <a class="wa-cta" href="https://wa.me/212693981822?text=%D8%A8%D8%BA%D9%8A%D8%AA%20%D9%86%D8%B1%D9%83%D8%A8%20VERTEX%20Try-On%20%D9%81%D9%8A%20%D9%85%D8%AA%D8%AC%D8%B1%D9%8A" target="_blank" rel="noopener" data-ar="اطلب التركيب" data-fr="Commander">اطلب التركيب</a>
+</div></header>
+
+<div class="hero">
+  <h1 data-ar="زبونك يقيس الحوايج… بلا ما يدخل للمحل" data-fr="Vos clients essaient vos vêtements… sans entrer en boutique">زبونك يقيس الحوايج… <span data-ar="بلا ما يدخل للمحل" data-fr="sans entrer en boutique">بلا ما يدخل للمحل</span></h1>
+  <p data-ar="غرفة قياس بالذكاء الاصطناعي كتركب في موقع متجرك بسطر واحد. الزبون كيختار أي قطعة، وكيشوف راسو لابسها — بصورتو ولا مباشرة بالكاميرا وهو كيتحرك." data-fr="Une cabine d'essayage IA qui s'installe sur votre boutique en une ligne. Le client choisit une pièce et se voit la porter — sur sa photo ou en direct, caméra ouverte, pendant qu'il bouge.">غرفة قياس بالذكاء الاصطناعي كتركب في موقع متجرك بسطر واحد. الزبون كيختار أي قطعة، وكيشوف راسو لابسها — بصورتو ولا مباشرة بالكاميرا وهو كيتحرك.</p>
+  <div class="btns">
+    <a class="btn gold" href="#demo" data-ar="جرّب الديمو الحي" data-fr="Essayer la démo live">جرّب الديمو الحي</a>
+    <a class="btn ghost" href="tryon.html" data-ar="افتح غرفة القياس" data-fr="Ouvrir la cabine">افتح غرفة القياس</a>
+  </div>
+  <div class="proofline" data-ar="الديمو اللي تحت خدام بنفس الويدجت اللي غادي يتركب في متجرك — بلا تسجيل، بلا تحميل." data-fr="La démo ci-dessous tourne avec le même widget qui sera installé sur votre boutique — sans inscription, sans téléchargement.">الديمو اللي تحت خدام بنفس الويدجت اللي غادي يتركب في متجرك — بلا تسجيل، بلا تحميل.</div>
+</div>
+
 <main>
-  <h2>Try it right here — these are live demo garments</h2>
+<section id="demo">
+  <h2 data-ar="جرّبها بنفسك — ديمو حي" data-fr="Essayez vous-même — démo en direct">جرّبها بنفسك — ديمو حي</h2>
+  <p class="sub" data-ar="هاد القطع الأربعة من متجر BOUFRAHI التجريبي. لاحظ زر «Try-On» فوق كل صورة: هادا هو الويدجت ديالنا خدام هنا، بنفس الطريقة اللي غادي يخدم بيها في أي متجر. اضغط على أي قطعة وجرّب." data-fr="Ces quatre pièces viennent de la boutique démo BOUFRAHI. Remarquez le bouton « Try-On » sur chaque photo : c'est notre widget, actif ici, exactement comme il le sera sur n'importe quelle boutique. Touchez une pièce et essayez.">هاد القطع الأربعة من متجر BOUFRAHI التجريبي. لاحظ زر «Try-On» فوق كل صورة: هادا هو الويدجت ديالنا خدام هنا، بنفس الطريقة اللي غادي يخدم بيها في أي متجر. اضغط على أي قطعة وجرّب.</p>
   <div class="grid">
     <figure><img src="img/puffer-orange.webp" alt="Puffer Jacket Orange"><figcaption>Puffer Jacket Orange</figcaption></figure>
     <figure><img src="img/bomber-olive.webp" alt="Bomber Jacket Olive"><figcaption>Bomber Jacket Olive</figcaption></figure>
     <figure><img src="img/wave-hoodie-olive.webp" alt="Wave Panel Hoodie Olive"><figcaption>Wave Panel Hoodie Olive</figcaption></figure>
     <figure><img src="img/piped-front.webp" alt="Piped Hoodie Black Yellow"><figcaption>Piped Hoodie Black Yellow</figcaption></figure>
   </div>
-  <p class="note">See the <b>✦ Try-On</b> buttons on the photos? That is this page's own widget, doing on this page exactly what it does on a client's store.</p>
+</section>
 
-  <h2>How a store installs it</h2>
-  <div class="steps">
-    <div class="step"><b>1 · Copy one line</b><p>Paste this before <b>&lt;/body&gt;</b> on the store — Shopify, WooCommerce, or any custom site. No build step, no theme files edited.</p></div>
-    <div class="step"><b>2 · Buttons appear</b><p>The widget finds the product photos by itself and adds a Try-On button to each garment.</p></div>
-    <div class="step"><b>3 · Shoppers try on</b><p>A shopper taps Try-On, adds their photo, and gets their picture wearing the piece. Optional live-video mode runs on Decart for stores that want it.</p></div>
+<section id="proof">
+  <h2 data-ar="نتيجة حقيقية من المحرك المجاني" data-fr="Un résultat réel du moteur gratuit">نتيجة حقيقية من المحرك المجاني</h2>
+  <p class="sub" data-ar="ماشي تصويرة إعلانية: هادي نتيجة فعلية خرجها محرك الصورة المجاني ديالنا. نفس الموديل، نفس السروال والصباط — غير الجاكيت تبدلات من البرتقالية للسوداء اللي عطيناه." data-fr="Pas une image publicitaire : voici une sortie réelle de notre moteur photo gratuit. Même modèle, même pantalon et chaussures — seule la veste est passée de l'orange à la noire fournie.">ماشي تصويرة إعلانية: هادي نتيجة فعلية خرجها محرك الصورة المجاني ديالنا. نفس الموديل، نفس السروال والصباط — غير الجاكيت تبدلات من البرتقالية للسوداء اللي عطيناه.</p>
+  <div class="ba">
+    <figure><img src="img/proof-before.jpg" alt="Before — orange puffer"><figcaption data-ar="قبل — الجاكيت البرتقالية" data-fr="Avant — veste orange">قبل — الجاكيت البرتقالية</figcaption></figure>
+    <div class="arrow">←</div>
+    <figure><img src="img/proof-after.jpg" alt="After — black puffer generated by the try-on engine"><figcaption data-ar="بعد — لابس الجاكيت السوداء" data-fr="Après — il porte la veste noire">بعد — لابس الجاكيت السوداء</figcaption></figure>
   </div>
-  <code class="box" id="snippet">&lt;script src="https://bofrahi12.github.io/vertex-tryon/widget.js" async&gt;&lt;/script&gt;</code>
-  <button class="copy" id="copyBtn">Copy the line</button>
+</section>
 
-  <h2>Honest pricing of the engines</h2>
+<section id="how">
+  <h2 data-ar="كيفاش كتركب في متجرك" data-fr="Comment ça s'installe sur votre boutique">كيفاش كتركب في متجرك</h2>
   <div class="steps">
-    <div class="step"><b>Photo engine — free</b><p>Open-source IDM-VTON on a public GPU. $0 to run, a photo result in 1–3 minutes. Best for demos and first sales.</p></div>
-    <div class="step"><b>Live engine — pay per second</b><p>Decart Lucy VTON at $0.02/second, billed to the store's own Decart account. Real-time video that follows the shopper.</p></div>
-    <div class="step"><b>The app itself — ours</b><p>The widget, the fitting room and the hosting are ours, free to run on GitHub Pages. Stores pay VERTEX for install + their engine usage — never the other way round.</p></div>
+    <div class="step"><b class="n">1</b><p data-ar="كنلصقو سطر واحد في موقعك (Shopify، WooCommerce، ولا موقع مخصص). بلا ما نبدلو الثيم، بلا ما نوقفو المتجر." data-fr="On colle une seule ligne dans votre site (Shopify, WooCommerce ou site sur mesure). Sans changer votre thème, sans arrêter la boutique.">كنلصقو سطر واحد في موقعك (Shopify، WooCommerce، ولا موقع مخصص). بلا ما نبدلو الثيم، بلا ما نوقفو المتجر.</p></div>
+    <div class="step"><b class="n">2</b><p data-ar="الويدجت كيفحص صفحات المنتجات بوحدو وكيزيد زر «Try-On» فوق كل قطعة — بلا ما تدخل نتا في حتى حاجة." data-fr="Le widget détecte tout seul vos pages produits et ajoute un bouton « Try-On » sur chaque pièce — vous n'avez rien à faire.">الويدجت كيفحص صفحات المنتجات بوحدو وكيزيد زر «Try-On» فوق كل قطعة — بلا ما تدخل نتا في حتى حاجة.</p></div>
+    <div class="step"><b class="n">3</b><p data-ar="الزبون كيضغط، وكتفتح ليه غرفة القياس فوق المتجر: كيختار وضع الصورة المجاني ولا اللايف بالكاميرا." data-fr="Le client touche le bouton, la cabine s'ouvre par-dessus la boutique : mode photo gratuit ou live caméra, au choix.">الزبون كيضغط، وكتفتح ليه غرفة القياس فوق المتجر: كيختار وضع الصورة المجاني ولا اللايف بالكاميرا.</p></div>
   </div>
+  <code class="box" id="snippet">&lt;script src="https://bofrahi12.github.io/nocta-clone/tryon/widget.js" async&gt;&lt;/script&gt;</code>
+  <button class="copy" id="copyBtn" data-ar="انسخ السطر" data-fr="Copier la ligne">انسخ السطر</button>
+  <p class="note" data-ar="هادا هو السطر الحقيقي اللي خدام في هاد الصفحة نفسها الآن." data-fr="C'est la ligne réelle, active sur cette page même en ce moment.">هادا هو السطر الحقيقي اللي خدام في هاد الصفحة نفسها الآن.</p>
+</section>
+
+<section id="engines">
+  <h2 data-ar="جوج محركات — اختار اللي يناسب متجرك" data-fr="Deux moteurs — choisissez pour votre boutique">جوج محركات — اختار اللي يناسب متجرك</h2>
+  <div class="cards">
+    <div class="card"><span class="tag" data-ar="مجاني" data-fr="GRATUIT">مجاني</span>
+      <h3 data-ar="وضع الصورة" data-fr="Mode photo">وضع الصورة</h3>
+      <p data-ar="الزبون كيرفع تصويرتو وكيتوصل بصورة ديالو لابس القطعة. محرك مفتوح المصدر (IDM-VTON) خدام على GPU عمومية — التكلفة 0 درهم، والنتيجة في 1–3 دقائق. مثالي للبداية ولإثبات الفكرة لزبنائك." data-fr="Le client envoie sa photo et reçoit son image portant la pièce. Moteur open source (IDM-VTON) sur GPU public — coût : 0, résultat en 1 à 3 minutes. Idéal pour démarrer et prouver le concept.">الزبون كيرفع تصويرتو وكيتوصل بصورة ديالو لابس القطعة. محرك مفتوح المصدر (IDM-VTON) خدام على GPU عمومية — التكلفة 0 درهم، والنتيجة في 1–3 دقائق. مثالي للبداية ولإثبات الفكرة لزبنائك.</p></div>
+    <div class="card"><span class="tag" data-ar="الأقوى" data-fr="PREMIUM">الأقوى</span>
+      <h3 data-ar="وضع اللايف — Decart Lucy" data-fr="Mode live — Decart Lucy">وضع اللايف — Decart Lucy</h3>
+      <p data-ar="تجربة حية بالكاميرا: الزبون كيتحرك والحوايج كيتبعوه في الوقت الحقيقي، بموديل Lucy VTON ديال Decart. الثمن $0.02 للثانية على حساب Decart ديال المتجر نفسو — كتدفع غير على الثواني اللي تجربات فعلاً، وبتوكنات جلسة قصيرة آمنة." data-fr="Essayage vidéo en direct : le client bouge, le vêtement le suit en temps réel, avec le modèle Lucy VTON de Decart. 0,02 $/seconde sur le compte Decart de la boutique — vous ne payez que les secondes réellement essayées, via des jetons de session sécurisés.">تجربة حية بالكاميرا: الزبون كيتحرك والحوايج كيتبعوه في الوقت الحقيقي، بموديل Lucy VTON ديال Decart. الثمن $0.02 للثانية على حساب Decart ديال المتجر نفسو — كتدفع غير على الثواني اللي تجربات فعلاً، وبتوكنات جلسة قصيرة آمنة.</p></div>
+    <div class="card"><span class="tag" data-ar="ديالنا" data-fr="À NOUS">ديالنا</span>
+      <h3 data-ar="التطبيق والاستضافة" data-fr="L'application et l'hébergement">التطبيق والاستضافة</h3>
+      <p data-ar="الويدجت وغرفة القياس منتج ديال VERTEX، مستضاف ومشغل بلا كلفة شهرية على البنية ديالنا. كتخلص التركيب والخدمة عند VERTEX — والاستعمال كيبقى على حساب المحرك اللي اخترتي." data-fr="Le widget et la cabine sont un produit VERTEX, hébergés et opérés sans coût mensuel sur notre infrastructure. Vous payez l'installation et le service chez VERTEX — l'usage reste sur le moteur choisi.">الويدجت وغرفة القياس منتج ديال VERTEX، مستضاف ومشغل بلا كلفة شهرية على البنية ديالنا. كتخلص التركيب والخدمة عند VERTEX — والاستعمال كيبقى على حساب المحرك اللي اخترتي.</p></div>
+  </div>
+</section>
+
+<section id="faq">
+  <h2 data-ar="أسئلة كتتعاود" data-fr="Questions fréquentes">أسئلة كتتعاود</h2>
+  <details><summary data-ar="واش خاصني نبدل موقعي ولا الثيم ديالي؟" data-fr="Faut-il changer mon site ou mon thème ?">واش خاصني نبدل موقعي ولا الثيم ديالي؟</summary>
+  <p data-ar="لا. التركيب هو سطر واحد كيتزاد، والويدجت كيتأقلم مع صور المنتجات اللي عندك أصلاً. إلا تحيد السطر، كلشي كيرجع كما كان." data-fr="Non. L'installation est une seule ligne ajoutée, et le widget s'adapte à vos photos produits existantes. Retirez la ligne, tout redevient comme avant.">لا. التركيب هو سطر واحد كيتزاد، والويدجت كيتأقلم مع صور المنتجات اللي عندك أصلاً. إلا تحيد السطر، كلشي كيرجع كما كان.</p></details>
+  <details><summary data-ar="شنو كيوقع لصور الزبناء؟" data-fr="Que deviennent les photos des clients ?">شنو كيوقع لصور الزبناء؟</summary>
+  <p data-ar="في وضع الصورة، التصويرة كتتصيفط غير لمحرك التجربة باش تولد النتيجة، والصفحة ديالنا ما كتخزن حتى صورة. في وضع اللايف، الفيديو كيتدفق مشفر لـ Decart وكيتحول في الوقت الحقيقي." data-fr="En mode photo, l'image part uniquement vers le moteur d'essayage pour générer le résultat ; notre page ne stocke aucune photo. En mode live, la vidéo est transmise chiffrée à Decart et transformée en temps réel.">في وضع الصورة، التصويرة كتتصيفط غير لمحرك التجربة باش تولد النتيجة، والصفحة ديالنا ما كتخزن حتى صورة. في وضع اللايف، الفيديو كيتدفق مشفر لـ Decart وكيتحول في الوقت الحقيقي.</p></details>
+  <details><summary data-ar="واش كيخدم في التيليفون؟" data-fr="Ça marche sur téléphone ?">واش كيخدم في التيليفون؟</summary>
+  <p data-ar="أييه — مصمم للتيليفون أولاً: الغرفة كتفتح في لوحة فوق المتجر، والكاميرا الأمامية هي الافتراضية في وضع اللايف." data-fr="Oui — pensé d'abord pour le téléphone : la cabine s'ouvre en panneau par-dessus la boutique, et le mode live utilise la caméra frontale par défaut.">أييه — مصمم للتيليفون أولاً: الغرفة كتفتح في لوحة فوق المتجر، والكاميرا الأمامية هي الافتراضية في وضع اللايف.</p></details>
+  <details><summary data-ar="بشحال غادي تكلفني؟" data-fr="Combien ça va me coûter ?">بشحال غادي تكلفني؟</summary>
+  <p data-ar="التركيب والخدمة كيتفق عليهم مع VERTEX حسب متجرك (صيفط لينا في واتساب). وضع الصورة مجاني في الاستعمال. وضع اللايف كيتحسب بالثانية عند Decart ($0.02) على حسابك نتا — بلا حتى درهم كيضيع إلا ما تجربات حتى جلسة." data-fr="L'installation et le service se conviennent avec VERTEX selon votre boutique (écrivez-nous sur WhatsApp). Le mode photo est gratuit à l'usage. Le mode live est facturé à la seconde par Decart (0,02 $) sur votre compte — aucun coût si aucune session n'est essayée.">التركيب والخدمة كيتفق عليهم مع VERTEX حسب متجرك (صيفط لينا في واتساب). وضع الصورة مجاني في الاستعمال. وضع اللايف كيتحسب بالثانية عند Decart ($0.02) على حسابك نتا — بلا حتى درهم كيضيع إلا ما تجربات حتى جلسة.</p></details>
+</section>
+
+<div class="cta-band">
+  <h2 data-ar="بغيتي غرفة قياس في متجرك؟" data-fr="Une cabine d'essayage sur votre boutique ?">بغيتي غرفة قياس في متجرك؟</h2>
+  <p data-ar="صيفط لينا رابط متجرك في واتساب، وغادي نركبو ليك الديمو على منتجاتك الحقيقية باش تشوفها خدامة قبل ما تقرر." data-fr="Envoyez-nous le lien de votre boutique sur WhatsApp, on installe la démo sur vos vrais produits pour que vous la voyiez fonctionner avant de décider.">صيفط لينا رابط متجرك في واتساب، وغادي نركبو ليك الديمو على منتجاتك الحقيقية باش تشوفها خدامة قبل ما تقرر.</p>
+  <a class="btn gold" href="https://wa.me/212693981822?text=%D8%A8%D8%BA%D9%8A%D8%AA%20%D9%86%D8%B1%D9%83%D8%A8%20VERTEX%20Try-On%20%D9%81%D9%8A%20%D9%85%D8%AA%D8%AC%D8%B1%D9%8A" target="_blank" rel="noopener" data-ar="كلمنا في واتساب" data-fr="Nous écrire sur WhatsApp">كلمنا في واتساب</a>
+</div>
 </main>
-<footer>VERTEX Try-On · Built by VERTEX WEB · Demo garments: BOUFRAHI collection</footer>
+
+<footer>
+  <b>VERTEX TRY-ON</b> · <span data-ar="منتج من" data-fr="Un produit de">منتج من</span> VERTEX WEB — <span data-ar="طنجة" data-fr="Tanger">طنجة</span><br>
+  <span data-ar="محرك الصورة: IDM-VTON (مفتوح المصدر) · محرك اللايف: Decart Lucy VTON · قطع الديمو: BOUFRAHI" data-fr="Moteur photo : IDM-VTON (open source) · Moteur live : Decart Lucy VTON · Pièces démo : BOUFRAHI">محرك الصورة: IDM-VTON (مفتوح المصدر) · محرك اللايف: Decart Lucy VTON · قطع الديمو: BOUFRAHI</span>
+</footer>
+
 <script src="widget.js" async></script>
 <script>
-document.getElementById('copyBtn').addEventListener('click',function(){
-  navigator.clipboard.writeText('<'+'script src="https://bofrahi12.github.io/vertex-tryon/widget.js" async><'+'/script>');
-  this.textContent='Copied ✓';
-});
+(function(){
+  var lang='ar';
+  function apply(l){
+    lang=l;
+    document.documentElement.lang = l==='ar'?'ar':'fr';
+    document.documentElement.dir = l==='ar'?'rtl':'ltr';
+    document.querySelectorAll('[data-ar]').forEach(function(el){ el.textContent = el.getAttribute('data-'+l); });
+    document.getElementById('langBtn').textContent = l==='ar'?'FR':'عربي';
+  }
+  document.getElementById('langBtn').addEventListener('click',function(){ apply(lang==='ar'?'fr':'ar'); });
+  document.getElementById('copyBtn').addEventListener('click',function(){
+    navigator.clipboard.writeText('<'+'script src="https://bofrahi12.github.io/nocta-clone/tryon/widget.js" async><'+'/script>');
+    this.textContent = lang==='ar'?'تنسخ ✓':'Copié ✓';
+  });
+})();
 </script>
 </body>
 </html>
