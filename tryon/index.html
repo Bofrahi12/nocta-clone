@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VERTEX Try-On — AI Fitting Room for any store</title>
+<meta name="description" content="One line of code adds an AI fitting room to any clothing store. Shoppers try garments on their own photo — free photo engine, optional live video.">
+<style>
+:root{--ink:#0a0a0a;--gold:#c9a24b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,Arial,sans-serif;color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:64px 20px 52px;text-align:center}
+header h1{font-size:clamp(30px,6vw,52px);letter-spacing:-.01em}
+header h1 span{color:var(--gold)}
+header p{color:#bbb;max-width:560px;margin:16px auto 26px;line-height:1.7;font-size:16px}
+.cta{display:inline-block;background:var(--gold);color:#0a0a0a;font-weight:800;padding:14px 26px;border-radius:999px;text-decoration:none}
+main{max-width:920px;margin:0 auto;padding:36px 18px 60px}
+h2{font-size:22px;margin:34px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.grid figure{background:#f4f4f2;border-radius:14px;overflow:hidden}
+.grid img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.grid figcaption{padding:10px 12px;font-size:13.5px;font-weight:700}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.step{border:1px solid #e6e6e6;border-radius:14px;padding:18px}
+.step b{display:block;margin-bottom:8px}
+.step p{color:#555;font-size:14px;line-height:1.65}
+code.box{display:block;background:#0d1117;color:#d6e7ff;padding:16px;border-radius:12px;font-size:13px;overflow-x:auto;white-space:nowrap;margin:10px 0}
+button.copy{background:var(--ink);color:#fff;border:none;padding:11px 20px;border-radius:999px;font-weight:800;cursor:pointer}
+.note{color:#777;font-size:13px;line-height:1.7;margin-top:12px}
+footer{background:var(--ink);color:#999;text-align:center;padding:26px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>VERTEX <span>TRY-ON</span></h1>
+  <p>An AI fitting room for any clothing store. Your shoppers open a product, tap <b>Try-On</b>, and see it on themselves. One line of code — hosted free, on your own store.</p>
+  <a class="cta" href="tryon.html">Open the fitting room →</a>
+</header>
+<main>
+  <h2>Try it right here — these are live demo garments</h2>
+  <div class="grid">
+    <figure><img src="img/puffer-orange.webp" alt="Puffer Jacket Orange"><figcaption>Puffer Jacket Orange</figcaption></figure>
+    <figure><img src="img/bomber-olive.webp" alt="Bomber Jacket Olive"><figcaption>Bomber Jacket Olive</figcaption></figure>
+    <figure><img src="img/wave-hoodie-olive.webp" alt="Wave Panel Hoodie Olive"><figcaption>Wave Panel Hoodie Olive</figcaption></figure>
+    <figure><img src="img/piped-front.webp" alt="Piped Hoodie Black Yellow"><figcaption>Piped Hoodie Black Yellow</figcaption></figure>
+  </div>
+  <p class="note">See the <b>✦ Try-On</b> buttons on the photos? That is this page's own widget, doing on this page exactly what it does on a client's store.</p>
+
+  <h2>How a store installs it</h2>
+  <div class="steps">
+    <div class="step"><b>1 · Copy one line</b><p>Paste this before <b>&lt;/body&gt;</b> on the store — Shopify, WooCommerce, or any custom site. No build step, no theme files edited.</p></div>
+    <div class="step"><b>2 · Buttons appear</b><p>The widget finds the product photos by itself and adds a Try-On button to each garment.</p></div>
+    <div class="step"><b>3 · Shoppers try on</b><p>A shopper taps Try-On, adds their photo, and gets their picture wearing the piece. Optional live-video mode runs on Decart for stores that want it.</p></div>
+  </div>
+  <code class="box" id="snippet">&lt;script src="https://bofrahi12.github.io/vertex-tryon/widget.js" async&gt;&lt;/script&gt;</code>
+  <button class="copy" id="copyBtn">Copy the line</button>
+
+  <h2>Honest pricing of the engines</h2>
+  <div class="steps">
+    <div class="step"><b>Photo engine — free</b><p>Open-source IDM-VTON on a public GPU. $0 to run, a photo result in 1–3 minutes. Best for demos and first sales.</p></div>
+    <div class="step"><b>Live engine — pay per second</b><p>Decart Lucy VTON at $0.02/second, billed to the store's own Decart account. Real-time video that follows the shopper.</p></div>
+    <div class="step"><b>The app itself — ours</b><p>The widget, the fitting room and the hosting are ours, free to run on GitHub Pages. Stores pay VERTEX for install + their engine usage — never the other way round.</p></div>
+  </div>
+</main>
+<footer>VERTEX Try-On · Built by VERTEX WEB · Demo garments: BOUFRAHI collection</footer>
+<script src="widget.js" async></script>
+<script>
+document.getElementById('copyBtn').addEventListener('click',function(){
+  navigator.clipboard.writeText('<'+'script src="https://bofrahi12.github.io/vertex-tryon/widget.js" async><'+'/script>');
+  this.textContent='Copied ✓';
+});
+</script>
+</body>
+</html>
