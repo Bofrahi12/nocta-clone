@@ -42,7 +42,8 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
 <header><b>VERTEX TRY-ON</b><span>AI FITTING ROOM ✦</span></header>
 <main>
   <div class="tabs">
-    <button id="tabLive" class="on">🎥 Live Try-On</button>
+    <button id="tabLive" class="on">🎥 Live Pro — Decart</button>
+    <button id="tabLight">⚡ Live Light — Ours · Free</button>
     <button id="tabPhoto">📸 Photo — Free</button>
   </div>
 
@@ -87,7 +88,22 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
       <video id="liveVideo" autoplay playsinline muted class="hidden"></video>
     </div>
   </section>
-  <p class="note" style="text-align:center;margin-top:8px">Powered by VERTEX Try-On · Photo engine: IDM-VTON (open source, non-commercial demo) · Live engine: Decart Lucy VTON</p>
+  <!-- LIVE LIGHT MODE (ours, in-browser, free) -->
+  <section id="lightMode" class="hidden">
+    <div class="card">
+      <h3>LIVE LIGHT — OUR OWN ENGINE · FREE</h3>
+      <p>Runs 100% in your browser: body-pose tracking (MediaPipe) pins the garment to your torso in real time. No server, no per-second cost — ours. It is a light overlay, not a photoreal re-render like Lucy Pro.</p>
+      <input type="text" id="lightGarment" placeholder="Garment image URL">
+      <img class="preview hidden" id="lightGarmentImg" alt="Garment for light session" style="margin-top:10px">
+      <button class="go" id="lightBtn" style="margin-top:12px">Start camera</button>
+      <p id="lightStatus" style="margin-top:10px"></p>
+      <div id="lightStage" class="hidden" style="position:relative;width:100%;margin-top:10px;transform:scaleX(-1)">
+        <video id="lightVideo" autoplay playsinline muted style="width:100%;display:block;border-radius:12px;background:#000"></video>
+        <canvas id="lightCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      </div>
+    </div>
+  </section>
+  <p class="note" style="text-align:center;margin-top:8px">Powered by VERTEX Try-On · Photo: IDM-VTON (open source) · Live Light: VERTEX in-browser pose engine · Live Pro: Decart Lucy VTON</p>
 </main>
 
 <script type="module">
@@ -141,12 +157,21 @@ $('goBtn').addEventListener('click', async ()=>{
 });
 
 /* tabs */
-$('tabPhoto').onclick=()=>{ $('tabPhoto').classList.add('on'); $('tabLive').classList.remove('on'); $('photoMode').classList.remove('hidden'); $('liveMode').classList.add('hidden'); };
-$('tabLive').onclick=()=>{ $('tabLive').classList.add('on'); $('tabPhoto').classList.remove('on'); $('liveMode').classList.remove('hidden'); $('photoMode').classList.add('hidden'); };
+function showTab(which){
+  [['tabLive','liveMode'],['tabLight','lightMode'],['tabPhoto','photoMode']].forEach(function(pair){
+    $(pair[0]).classList.toggle('on', pair[0]===which);
+    $(pair[1]).classList.toggle('hidden', pair[0]!==which);
+  });
+}
+$('tabPhoto').onclick=()=>showTab('tabPhoto');
+$('tabLive').onclick=()=>showTab('tabLive');
+$('tabLight').onclick=()=>showTab('tabLight');
 
 /* live mode (Decart) */
 const saved=localStorage.getItem('vtx_decart_key'); if(saved) $('decartKey').value=saved;
 if(qs.get('garment')){ $('liveGarment').value=qs.get('garment'); const li=$('liveGarmentImg'); li.src=qs.get('garment'); li.classList.remove('hidden'); }
+if(qs.get('garment')){ $('lightGarment').value=qs.get('garment'); const gi=$('lightGarmentImg'); gi.src=qs.get('garment'); gi.classList.remove('hidden'); }
+$('lightGarment').addEventListener('change',()=>{ const u=$('lightGarment').value.trim(); const gi=$('lightGarmentImg'); if(u){ gi.src=u; gi.classList.remove('hidden'); } });
 $('liveGarment').addEventListener('change',()=>{ const u=$('liveGarment').value.trim(); const li=$('liveGarmentImg'); if(u){ li.src=u; li.classList.remove('hidden'); } });
 $('liveBtn').addEventListener('click', async ()=>{
   const key=$('decartKey').value.trim(); const ls=$('liveStatus');
@@ -174,6 +199,146 @@ $('liveBtn').addEventListener('click', async ()=>{
   }catch(err){ ls.textContent='Live session could not start: '+((err&&err.code?err.code+': ':'')+(err&&err.message||err)); }
   btn.disabled=false;
 });
+</script>
+<script type="module">
+/* ===== VERTEX Live Light — our own in-browser pose try-on (free, no server) ===== */
+const L$=id=>document.getElementById(id);
+let lightLandmarker=null, lightGarmentObj=null, lightRunning=false, lightSmooth=null;
+const VDIR=new URL('vendor/mediapipe/',location.href).href;
+const LMODEL=VDIR+'pose_lite.task';
+
+async function lightMakeLandmarker(mode){
+  const vision=await import(VDIR+'vision_bundle.mjs');
+  const fileset=await vision.FilesetResolver.forVisionTasks(VDIR+'wasm');
+  return vision.PoseLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:LMODEL,delegate:'GPU'},runningMode:mode,numPoses:1});
+}
+function lightLoadGarment(url){
+  return new Promise((res,rej)=>{ const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>res(im); im.onerror=rej; im.src=url; });
+}
+/* Cut a product shot off its (near-uniform) studio background: flood from the
+   borders over pixels close to the corner colour, feather the edge. */
+function lightCutout(img){
+  const w=img.naturalWidth, h=img.naturalHeight;
+  const src=document.createElement('canvas'); src.width=w; src.height=h;
+  const sctx=src.getContext('2d',{willReadFrequently:true}); sctx.drawImage(img,0,0);
+  let data; try{ data=sctx.getImageData(0,0,w,h); }catch(e){ return img; }
+  const px=data.data;
+  const corner=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]].map(([x,y])=>{ const i=(y*w+x)*4; return [px[i],px[i+1],px[i+2]]; });
+  const bg=[0,1,2].map(c=>Math.round(corner.reduce((s,v)=>s+v[c],0)/4));
+  const TOL=42, TOL2=TOL*TOL;
+  const isBg=i=>{ const dr=px[i]-bg[0], dg=px[i+1]-bg[1], db=px[i+2]-bg[2]; return dr*dr+dg*dg+db*db<TOL2; };
+  const seen=new Uint8Array(w*h), stack=[];
+  for(let x=0;x<w;x++){ stack.push(x,(h-1)*w+x); }
+  for(let y=0;y<h;y++){ stack.push(y*w,y*w+w-1); }
+  while(stack.length){
+    const p=stack.pop(); if(seen[p]) continue; seen[p]=1;
+    const i=p*4; if(!isBg(i)) continue;
+    px[i+3]=0;
+    const x=p%w, y=(p/w)|0;
+    if(x>0)stack.push(p-1); if(x<w-1)stack.push(p+1); if(y>0)stack.push(p-w); if(y<h-1)stack.push(p+w);
+  }
+  sctx.putImageData(data,0,0);
+  /* crop to the garment's own bounding box so it fills the body quad */
+  let minX=w,maxX=-1,minY=h,maxY=-1;
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(px[(y*w+x)*4+3]>12){ if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; } }
+  if(maxX<0) return src;
+  const pad=Math.round(Math.max(maxX-minX,maxY-minY)*0.02);
+  minX=Math.max(0,minX-pad); minY=Math.max(0,minY-pad); maxX=Math.min(w-1,maxX+pad); maxY=Math.min(h-1,maxY+pad);
+  const out=document.createElement('canvas'); out.width=maxX-minX+1; out.height=maxY-minY+1;
+  out.getContext('2d').drawImage(src,minX,minY,out.width,out.height,0,0,out.width,out.height);
+  return out;
+}
+/* Torso quad from pose landmarks (normalized) -> pixel corners, widened + lengthened like a real garment */
+function lightQuad(lm,W,H){
+  const S=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const ls=S(11),rs=S(12),lh=S(23),rh=S(24);
+  const dx=rs.x-ls.x, dy=rs.y-ls.y, span=Math.hypot(dx,dy);
+  const ux=dx/span, uy=dy/span;                 /* along-shoulder unit */
+  const cx=(ls.x+rs.x)/2, cy=(ls.y+rs.y)/2;     /* shoulder centre */
+  const hx=(lh.x+rh.x)/2, hy=(lh.y+rh.y)/2;     /* hip centre */
+  const wHalf=span*0.86, topLift=span*0.16, drop=(hy-cy)*0.42 + span*0.10;
+  const TL={x:cx-ux*wHalf, y:cy-uy*wHalf - topLift}, TR={x:cx+ux*wHalf, y:cy+uy*wHalf - topLift};
+  const BL={x:hx-ux*wHalf, y:hy-uy*wHalf + drop},   BR={x:hx+ux*wHalf, y:hy+uy*wHalf + drop};
+  return [TL,TR,BR,BL];
+}
+function lightWarp(ctx,g,quad){
+  const N=12, gw=g.naturalWidth||g.width, gh=g.naturalHeight||g.height, [TL,TR,BR,BL]=quad;
+  const lerp=(a,b,t)=>({x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t});
+  for(let i=0;i<N;i++){
+    const t0=i/N, t1=(i+1)/N;
+    const a=lerp(TL,BL,t0), b=lerp(TR,BR,t0), c=lerp(TL,BL,t1), d=lerp(TR,BR,t1);
+    const sy=gh*t0, sh=gh/N+3;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(d.x,d.y); ctx.lineTo(c.x,c.y); ctx.closePath(); ctx.clip();
+    ctx.setTransform((b.x-a.x)/gw,(b.y-a.y)/gw,(c.x-a.x)/sh,(c.y-a.y)/sh,a.x,a.y);
+    ctx.drawImage(g,0,sy,gw,sh,0,0,gw,sh);
+    ctx.restore();
+  }
+  ctx.setTransform(1,0,0,1,0,0);
+}
+async function lightEnsureGarment(){
+  const u=L$('lightGarment').value.trim();
+  if(!u) return null;
+  const abs=new URL(u,location.href).href;
+  if(lightGarmentObj && lightGarmentObj.__src===abs) return lightGarmentObj;
+  const raw=await lightLoadGarment(u);
+  lightGarmentObj=lightCutout(raw); lightGarmentObj.__src=abs; return lightGarmentObj;
+}
+L$('lightGarment').addEventListener('change',()=>{ lightGarmentObj=null; });
+
+L$('lightBtn').addEventListener('click', async ()=>{
+  const st=L$('lightStatus'), btn=L$('lightBtn');
+  if(lightRunning){ lightRunning=false; btn.textContent='Start camera'; return; }
+  btn.disabled=true;
+  try{
+    st.textContent='Loading our pose engine…';
+    if(!lightLandmarker) lightLandmarker=await lightMakeLandmarker('VIDEO');
+    const g=await lightEnsureGarment();
+    if(!g){ st.textContent='Add a garment image URL first.'; btn.disabled=false; return; }
+    st.textContent='Starting your camera…';
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
+    const v=L$('lightVideo'); v.srcObject=stream; await v.play();
+    L$('lightStage').classList.remove('hidden');
+    const cv=L$('lightCanvas'), ctx=cv.getContext('2d');
+    cv.width=v.videoWidth; cv.height=v.videoHeight;
+    lightRunning=true; btn.disabled=false; btn.textContent='Stop';
+    st.textContent='Live Light ✦ Move — the garment follows your torso.';
+    let lastT=-1;
+    const loop=()=>{
+      if(!lightRunning) return;
+      if(v.currentTime!==lastT){
+        lastT=v.currentTime;
+        try{
+          const res=lightLandmarker.detectForVideo(v,performance.now());
+          ctx.clearRect(0,0,cv.width,cv.height);
+          const lm=res && res.landmarks && res.landmarks[0];
+          if(lm){
+            if(!lightSmooth) lightSmooth=lm.map(p=>({x:p.x,y:p.y}));
+            else lm.forEach((p,i)=>{ lightSmooth[i].x+=(p.x-lightSmooth[i].x)*0.55; lightSmooth[i].y+=(p.y-lightSmooth[i].y)*0.55; });
+            lightWarp(ctx,g,lightQuad(lightSmooth,cv.width,cv.height));
+          }
+        }catch(e){ /* frame hiccup */ }
+      }
+      requestAnimationFrame(loop);
+    };
+    loop();
+  }catch(err){ st.textContent='Live Light could not start: '+((err&&err.message)||err); btn.disabled=false; }
+});
+
+/* QA hook: run the same detection + warp on a still photo (no camera needed) */
+window.__vtxLightTest=async function(personUrl,garmentUrl){
+  const det=await lightMakeLandmarker('IMAGE');
+  const person=await lightLoadGarment(personUrl);
+  const g=lightCutout(await lightLoadGarment(garmentUrl));
+  const res=det.detect(person);
+  const lm=res && res.landmarks && res.landmarks[0];
+  if(!lm) return {found:false};
+  const cv=document.createElement('canvas'); cv.width=person.naturalWidth; cv.height=person.naturalHeight;
+  const ctx=cv.getContext('2d'); ctx.drawImage(person,0,0);
+  lightWarp(ctx,g,lightQuad(lm,cv.width,cv.height));
+  const px=ctx.getImageData(cv.width/2, cv.height*0.45, 1, 1).data;
+  return {found:true, shoulderSpan:Math.abs(lm[11].x-lm[12].x).toFixed(3), centrePixel:[px[0],px[1],px[2]], canvas:cv};
+};
 </script>
 </body>
 </html>
