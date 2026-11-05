@@ -44,7 +44,8 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
   <div class="tabs">
     <button id="tabLive" class="on">🎥 Live Pro — Decart</button>
     <button id="tabLight">⚡ Live Light — Ours · Free</button>
-    <button id="tabPhoto">📸 Photo — Free</button>
+    <button id="tabPhoto">📸 Photo Pro — Ours</button>
+    <button id="tabGen">🎞️ AI Live — Ours</button>
   </div>
 
   <!-- PHOTO MODE -->
@@ -103,7 +104,22 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
       </div>
     </div>
   </section>
-  <p class="note" style="text-align:center;margin-top:8px">Powered by VERTEX Try-On · Photo: IDM-VTON (open source) · Live Light: VERTEX in-browser pose engine · Live Pro: Decart Lucy VTON</p>
+  <p class="note" style="text-align:center;margin-top:8px">Powered by VERTEX Try-On · Photo Pro: FASHN VTON 1.5 (Apache-2.0) · Live Light: VERTEX in-browser pose engine · Live Pro: Decart Lucy VTON</p>
+  <!-- AI LIVE MODE (generative frames, ours) -->
+  <section id="genMode" class="hidden">
+    <div class="card">
+      <h3>🎞️ AI LIVE — GENERATED ON YOU, FRAME BY FRAME</h3>
+      <p class="note">Our generative engine (FASHN VTON, Apache-2.0) re-dresses a fresh camera frame every cycle — real generated fabric on your body, not a flat overlay. The free GPU needs some seconds per frame; a rented GPU makes it smooth.</p>
+      <input id="genGarment" type="url" placeholder="Garment image URL" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;margin:8px 0">
+      <img id="genGarmentImg" class="hidden" style="width:90px;border-radius:10px">
+      <button id="genBtn" class="go">Start AI Live</button>
+      <div id="genStatus" style="font-size:13px;color:#444;margin-top:10px">Idle.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <video id="genVideo" autoplay playsinline muted></video>
+        <img id="genResult" class="hidden" style="width:100%;border-radius:12px">
+      </div>
+    </div>
+  </section>
 </main>
 
 <script type="module">
@@ -135,16 +151,23 @@ if(qs.get('garment')) setGarment(qs.get('garment'), qs.get('name')||'garment'); 
 $('garmentFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; garmentBlob=f; $('garmentImg').src=URL.createObjectURL(f); ready(); });
 $('personFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; personBlob=f; const im=$('personImg'); im.src=URL.createObjectURL(f); im.classList.remove('hidden'); ready(); });
 
+function vtxInferKind(){
+  const s=((garmentDes||'')+' '+($('garmentImg').src||'')).toLowerCase();
+  const category=/pant|short|jean|denim|skirt|legging|trouser/.test(s)?'bottoms':(/dress|jumpsuit|one-piece|robe/.test(s)?'one-pieces':'tops');
+  const garment_photo_type=/model|campaign|hero|worn|portrait/.test(s)?'model':'flat-lay';
+  return {category, garment_photo_type};
+}
 $('goBtn').addEventListener('click', async ()=>{
-  $('goBtn').disabled=true; status('Connecting to the free try-on model…');
+  $('goBtn').disabled=true; status('Connecting to the VERTEX photo engine…');
   try{
     const {Client}=await import('https://cdn.jsdelivr.net/npm/@gradio/client/+esm');
-    const client=await Client.connect('yisol/IDM-VTON');
-    status('In the queue — a free GPU is preparing your photo. This can take 1–3 minutes…');
-    const res=await client.predict('/tryon',{
-      dict:{background:personBlob, layers:[], composite:null},
-      garm_img:garmentBlob, garment_des:garmentDes,
-      is_checked:true, is_checked_crop:false, denoise_steps:30, seed:42 });
+    const client=await Client.connect('fashn-ai/fashn-vton-1.5');
+    status('In the queue — a GPU is dressing your photo. This can take 1–3 minutes…');
+    const kind=vtxInferKind();
+    const res=await client.predict('/try_on',{
+      person_image:personBlob, garment_image:garmentBlob,
+      category:kind.category, garment_photo_type:kind.garment_photo_type,
+      num_timesteps:50, guidance_scale:1.5, seed:42, segmentation_free:true });
     const out=res.data[0];
     const url=typeof out==='string'?out:(out.url||out.path);
     $('resultImg').src=url; $('dl').href=url;
@@ -158,7 +181,7 @@ $('goBtn').addEventListener('click', async ()=>{
 
 /* tabs */
 function showTab(which){
-  [['tabLive','liveMode'],['tabLight','lightMode'],['tabPhoto','photoMode']].forEach(function(pair){
+  [['tabLive','liveMode'],['tabLight','lightMode'],['tabPhoto','photoMode'],['tabGen','genMode']].forEach(function(pair){
     $(pair[0]).classList.toggle('on', pair[0]===which);
     $(pair[1]).classList.toggle('hidden', pair[0]!==which);
   });
@@ -166,10 +189,12 @@ function showTab(which){
 $('tabPhoto').onclick=()=>showTab('tabPhoto');
 $('tabLive').onclick=()=>showTab('tabLive');
 $('tabLight').onclick=()=>showTab('tabLight');
+$('tabGen').onclick=()=>showTab('tabGen');
 
 /* live mode (Decart) */
 const saved=localStorage.getItem('vtx_decart_key'); if(saved) $('decartKey').value=saved;
 if(qs.get('garment')){ $('liveGarment').value=qs.get('garment'); const li=$('liveGarmentImg'); li.src=qs.get('garment'); li.classList.remove('hidden'); }
+if(qs.get('garment')){ $('genGarment').value=qs.get('garment'); const gi2=$('genGarmentImg'); gi2.src=qs.get('garment'); gi2.classList.remove('hidden'); }
 if(qs.get('garment')){ $('lightGarment').value=qs.get('garment'); const gi=$('lightGarmentImg'); gi.src=qs.get('garment'); gi.classList.remove('hidden'); }
 $('lightGarment').addEventListener('change',()=>{ const u=$('lightGarment').value.trim(); const gi=$('lightGarmentImg'); if(u){ gi.src=u; gi.classList.remove('hidden'); } });
 $('liveGarment').addEventListener('change',()=>{ const u=$('liveGarment').value.trim(); const li=$('liveGarmentImg'); if(u){ li.src=u; li.classList.remove('hidden'); } });
@@ -501,6 +526,60 @@ window.__vtxLightTest=async function(personUrl,garmentUrl){
   const px=ctx.getImageData(cv.width/2, cv.height*0.45, 1, 1).data;
   return {found:true, shoulderSpan:Math.abs(lm[11].x-lm[12].x).toFixed(3), centrePixel:[px[0],px[1],px[2]], canvas:cv};
 };
+</script>
+<script type="module">
+/* ===== VERTEX AI Live \u2014 generative frames (FASHN VTON) ===== */
+const G$=id=>document.getElementById(id);
+let genRunning=false, genStream=null, genClient=null, genGarmBlob=null;
+function genStatus(s){ G$('genStatus').textContent=s; }
+function genKind(url){
+  const s=(url||'').toLowerCase();
+  const category=/pant|short|jean|denim|skirt|legging|trouser/.test(s)?'bottoms':(/dress|jumpsuit|robe/.test(s)?'one-pieces':'tops');
+  const garment_photo_type=/model|campaign|hero|worn|portrait/.test(s)?'model':'flat-lay';
+  return {category, garment_photo_type};
+}
+async function genFrame(){
+  const v=G$('genVideo');
+  if(!v.videoWidth) return;
+  const scale=Math.min(1, 768/v.videoWidth);
+  const cv=document.createElement('canvas'); cv.width=Math.round(v.videoWidth*scale); cv.height=Math.round(v.videoHeight*scale);
+  cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);
+  const frame=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.88));
+  const kind=genKind(G$('genGarment').value.trim());
+  const t0=Date.now();
+  const res=await genClient.predict('/try_on',{
+    person_image:frame, garment_image:genGarmBlob,
+    category:kind.category, garment_photo_type:kind.garment_photo_type,
+    num_timesteps:30, guidance_scale:1.5, seed:42, segmentation_free:true });
+  const out=res.data[0]; const url=typeof out==='string'?out:(out.url||out.path);
+  const im=G$('genResult'); im.src=url; im.classList.remove('hidden');
+  genStatus('AI Live \u2726 frame ready in '+Math.round((Date.now()-t0)/1000)+'s \u2014 generating the next\u2026');
+}
+G$('genBtn').addEventListener('click', async ()=>{
+  const btn=G$('genBtn');
+  if(genRunning){ genRunning=false; btn.textContent='Start AI Live'; genStatus('Stopped.'); try{ genStream&&genStream.getTracks().forEach(x=>x.stop()); }catch(e){} return; }
+  const gu=G$('genGarment').value.trim();
+  if(!gu){ genStatus('Add a garment image URL first.'); return; }
+  btn.disabled=true;
+  try{
+    genStatus('Loading the garment\u2026');
+    const r=await fetch(gu); genGarmBlob=await r.blob();
+    if(!genClient){
+      genStatus('Connecting to our generative engine\u2026');
+      const {Client}=await import('https://cdn.jsdelivr.net/npm/@gradio/client/+esm');
+      genClient=await Client.connect('fashn-ai/fashn-vton-1.5');
+    }
+    genStatus('Starting your camera\u2026');
+    genStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
+    const v=G$('genVideo'); v.srcObject=genStream; await v.play();
+    genRunning=true; btn.disabled=false; btn.textContent='Stop';
+    genStatus('AI Live \u2726 generating your first frame\u2026');
+    while(genRunning){
+      try{ await genFrame(); }
+      catch(e){ genStatus('Frame failed ('+((e&&e.message)||e)+') \u2014 retrying\u2026'); await new Promise(r=>setTimeout(r,3000)); }
+    }
+  }catch(err){ genStatus('AI Live could not start: '+((err&&err.message)||err)); btn.disabled=false; }
+});
 </script>
 </body>
 </html>
