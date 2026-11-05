@@ -457,6 +457,10 @@ header nav a:hover::after{width:100%}
 .card:hover img{transform:scale(1.06) translateY(-5px)}
 .card h3{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;margin-top:16px}
 .card .price{color:var(--grey);font-size:12px;margin-top:5px;letter-spacing:.06em}
+.vtx-native{margin:11px auto 4px;display:block;background:#0a0a0a;color:#fff;border:none;font-size:10.5px;font-weight:800;letter-spacing:.18em;padding:9px 18px;border-radius:999px;cursor:pointer;transition:.25s}
+.vtx-native:hover{background:#c9a24b;color:#0a0a0a}
+.tryon-btn{width:100%;margin-top:10px;background:#fff;color:#0a0a0a;border:2px solid #0a0a0a;border-radius:999px;padding:14px 10px;font-size:12.5px;font-weight:800;letter-spacing:.08em;cursor:pointer;transition:.25s}
+.tryon-btn:hover{background:#0a0a0a;color:#c9a24b}
 
 /* ---------- marquee ---------- */
 .marquee{background:#0a0a0a;color:#fff;overflow:hidden;padding:15px 0;margin-top:56px}
@@ -1024,8 +1028,9 @@ footer .paychips span{border-color:#333;color:#9a9a9a}
         <span class="qtyctl"><button onclick="chQtyPDP(-1)">−</button><span id="pQty">1</span><button onclick="chQtyPDP(1)">+</button></span>
       </div>
       <button class="addcart" id="pAdd" onclick="addToBag()"></button>
+      <button class="tryon-btn" id="pTryOn" data-vtx-tryon="">✦ VIRTUAL TRY-ON — SEE IT ON YOU</button>
       <span class="sguide" onclick="openModal()">Size guide</span>
-      <p class="tryon-note">✦ <b>Virtual Try-On</b> — tap the <b>Try-On</b> button on the photo and see this piece on you, live on camera.</p>
+      <p class="tryon-note">✦ <b>Virtual Try-On</b> — tap the button above and see this piece on you: on your photo, or live on camera.</p>
     </div>
   </div>
   <div class="lookrow">
@@ -1182,7 +1187,7 @@ function cardHTML(p,imgSrc){
   const tag=p.tag?`<span class="ptag">${p.tag}</span>`:'';
   const szs=p.sizes||['S','M','L','XL'];
   const qa=`<div class="qa" data-qa="${p.id}"><small>QUICK ADD +</small><div class="qasizes">${szs.map(z=>`<button data-add="${p.id}|${z}">${z}</button>`).join('')}</div></div>`;
-  return `<div class="ph"><img src="${imgSrc}" alt="${p.name}" loading="lazy">${hov}${tag}<button class="wish" data-wish="${p.id}" aria-label="Save to wishlist">♥</button>${qa}</div><h3>${p.name}</h3><p class="price">${fmt(p.price)}</p>`;
+  return `<div class="ph"><img src="${imgSrc}" alt="${p.name}" loading="lazy">${hov}${tag}<button class="wish" data-wish="${p.id}" aria-label="Save to wishlist">♥</button>${qa}</div><h3>${p.name}</h3><p class="price">${fmt(p.price)}</p><button class="vtx-native" data-vtx-tryon="${imgSrc}">✦ VIRTUAL TRY-ON</button>`;
 }
 function fillGrid(el,list,reveal){
   list.forEach((p,i)=>{
@@ -1266,6 +1271,7 @@ function openPDP(id){
   document.getElementById('pSpecs').innerHTML=curP.specs.map(s=>`<li><b>${s[0]}:</b> ${s[1]}</li>`).join('');
   document.getElementById('pModel').textContent=curP.model;
   document.getElementById('pAdd').textContent='ADD TO CART — '+fmt(curP.price);
+  document.getElementById('pTryOn').setAttribute('data-vtx-tryon',curP.img);
   document.getElementById('tabBody').textContent=curP.desc;
   fillLook();
   const szs=curP.sizes||['S','M','L','XL']; curSize=szs[0]; const ps=document.getElementById('pSizes'); ps.innerHTML='';

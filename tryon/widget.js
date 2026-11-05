@@ -53,6 +53,19 @@
     document.body.style.overflow = "";
   }
 
+  /* Native integration: any element with [data-vtx-tryon="<garment url>"]
+     opens the room — stores can hard-code their own Try-On buttons. */
+  window.VTXTryOn = { open: openRoom, close: closeRoom };
+  document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest("[data-vtx-tryon]") : null;
+    if (!t) return;
+    var g = t.getAttribute("data-vtx-tryon");
+    if (!g) return;
+    e.preventDefault(); e.stopPropagation();
+    try { g = new URL(g, location.href).href; } catch (err) {}
+    openRoom(g);
+  }, true);
+
   function isGarment(img) {
     if (img.dataset.vtxDone) return false;
     var src = (img.currentSrc || img.src || "");
@@ -72,6 +85,7 @@
         img.dataset.vtxDone = "1";
         var parent = img.parentElement;
         if (!parent) return;
+        if (parent.querySelector("[data-vtx-tryon]")) return; /* store has its own native button here */
         if (getComputedStyle(parent).position === "static") parent.classList.add("vtx-wrap");
         var b = document.createElement("button");
         b.className = "vtx-btn";
