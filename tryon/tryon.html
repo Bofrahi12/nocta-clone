@@ -173,31 +173,55 @@ if(qs.get('garment')){ $('liveGarment').value=qs.get('garment'); const li=$('liv
 if(qs.get('garment')){ $('lightGarment').value=qs.get('garment'); const gi=$('lightGarmentImg'); gi.src=qs.get('garment'); gi.classList.remove('hidden'); }
 $('lightGarment').addEventListener('change',()=>{ const u=$('lightGarment').value.trim(); const gi=$('lightGarmentImg'); if(u){ gi.src=u; gi.classList.remove('hidden'); } });
 $('liveGarment').addEventListener('change',()=>{ const u=$('liveGarment').value.trim(); const li=$('liveGarmentImg'); if(u){ li.src=u; li.classList.remove('hidden'); } });
+let liveClient=null, liveStream=null, liveBusy=false;
+async function liveCleanup(){
+  try{ if(liveClient && liveClient.realtime && liveClient.realtime.disconnect) await liveClient.realtime.disconnect(); }catch(e){}
+  try{ if(liveClient && liveClient.disconnect) await liveClient.disconnect(); }catch(e){}
+  liveClient=null;
+  try{ if(liveStream) liveStream.getTracks().forEach(tr=>tr.stop()); }catch(e){}
+  liveStream=null;
+}
 $('liveBtn').addEventListener('click', async ()=>{
   const key=$('decartKey').value.trim(); const ls=$('liveStatus');
-  if(!key){ ls.textContent='Step 0/4 — Paste the store Decart API key first.'; return; }
+  if(!key){ ls.textContent='Step 0/4 \u2014 Paste the store Decart API key first.'; return; }
+  if(liveBusy) return;
+  liveBusy=true;
   localStorage.setItem('vtx_decart_key',key);
   const btn=$('liveBtn'); btn.disabled=true;
+  const waitS=(pr,ms)=>Promise.race([pr.then(()=>true), new Promise(r=>setTimeout(()=>r(false),ms))]);
   try{
-    ls.textContent='Step 1/4 — Loading the Decart engine…';
+    await liveCleanup();
+    ls.textContent='Step 1/4 \u2014 Loading the Decart engine\u2026';
     const sdk=await import('https://esm.run/@decartai/sdk@0.2.14');
-    ls.textContent='Step 2/4 — Preparing a session token…';
+    ls.textContent='Step 2/4 \u2014 Preparing a session token\u2026';
     let auth=key;
     try{
       const tr=await fetch('https://api.decart.ai/v1/client/tokens',{method:'POST',headers:{'X-API-KEY':key}});
       if(tr.ok){ const tj=await tr.json(); if(tj.apiKey) auth=tj.apiKey; }
     }catch(e){ /* direct key fallback */ }
-    ls.textContent='Step 3/4 — Starting your camera…';
+    ls.textContent='Step 3/4 \u2014 Starting your camera\u2026';
     const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
-    ls.textContent='Step 4/4 — Connecting to Lucy (live)…';
-    const client=sdk.createDecartClient({apiKey:auth});
+    liveStream=stream;
+    ls.textContent='Step 4/4 \u2014 Connecting to Lucy (live)\u2026';
+    const client=sdk.createDecartClient({apiKey:auth}); liveClient=client;
     const model=sdk.models.realtime('lucy-vton-latest');
     const gu=$('liveGarment').value.trim();
-    await client.realtime.connect(stream,{model, mirror:'auto',
+    let gotStream=false, resolveStream; const streamReady=new Promise(r=>resolveStream=r);
+    let connectErr=null;
+    const connectP=client.realtime.connect(stream,{model, mirror:'auto',
       initialState:{ prompt:{text:'Replace the outfit of the person with the garment from the reference image, keeping the person, face and background unchanged'}, image: gu||undefined },
-      onRemoteStream:(s)=>{ const v=$('liveVideo'); v.srcObject=s; v.classList.remove('hidden'); ls.textContent='Live ✦ Move — the garment follows you.'; }});
+      onRemoteStream:(s)=>{ const v=$('liveVideo'); v.srcObject=s; v.classList.remove('hidden'); ls.textContent='Live \u2726 Move \u2014 the garment follows you.'; gotStream=true; resolveStream(); }}).catch(e=>{ connectErr=e; });
+    await Promise.race([connectP, streamReady]);
+    if(!gotStream){
+      if(connectErr && /stale/i.test(String((connectErr&&connectErr.message)||connectErr))){
+        ls.textContent='Step 4/4 \u2014 Attempts raced; waiting for the surviving connection\u2026';
+        await waitS(streamReady, 30000);
+      } else if(connectErr){ throw connectErr; }
+      else { await waitS(streamReady, 20000); }
+    }
+    if(!gotStream) throw new Error('Connection timed out \u2014 check your network and try once more.');
   }catch(err){ ls.textContent='Live session could not start: '+((err&&err.code?err.code+': ':'')+(err&&err.message||err)); }
-  btn.disabled=false;
+  btn.disabled=false; liveBusy=false;
 });
 </script>
 <script type="module">
@@ -221,27 +245,51 @@ function lightCutout(img){
   const w=img.naturalWidth, h=img.naturalHeight;
   const src=document.createElement('canvas'); src.width=w; src.height=h;
   const sctx=src.getContext('2d',{willReadFrequently:true}); sctx.drawImage(img,0,0);
-  let data; try{ data=sctx.getImageData(0,0,w,h); }catch(e){ return img; }
-  const px=data.data;
-  const corner=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]].map(([x,y])=>{ const i=(y*w+x)*4; return [px[i],px[i+1],px[i+2]]; });
+  let base; try{ base=sctx.getImageData(0,0,w,h); }catch(e){ return img; }
+  const bp=base.data;
+  const corner=[[0,0],[w-1,0],[0,h-1],[w-1,h-1]].map(([x,y])=>{ const i=(y*w+x)*4; return [bp[i],bp[i+1],bp[i+2]]; });
   const bg=[0,1,2].map(c=>Math.round(corner.reduce((s,v)=>s+v[c],0)/4));
-  const TOL=42, TOL2=TOL*TOL;
-  const isBg=i=>{ const dr=px[i]-bg[0], dg=px[i+1]-bg[1], db=px[i+2]-bg[2]; return dr*dr+dg*dg+db*db<TOL2; };
-  const seen=new Uint8Array(w*h), stack=[];
-  for(let x=0;x<w;x++){ stack.push(x,(h-1)*w+x); }
-  for(let y=0;y<h;y++){ stack.push(y*w,y*w+w-1); }
-  while(stack.length){
-    const p=stack.pop(); if(seen[p]) continue; seen[p]=1;
-    const i=p*4; if(!isBg(i)) continue;
-    px[i+3]=0;
-    const x=p%w, y=(p/w)|0;
-    if(x>0)stack.push(p-1); if(x<w-1)stack.push(p+1); if(y>0)stack.push(p-w); if(y<h-1)stack.push(p+w);
+  function flood(px,TOL){
+    const TOL2=TOL*TOL;
+    const isBg=i=>{ const dr=px[i]-bg[0], dg=px[i+1]-bg[1], db=px[i+2]-bg[2]; return dr*dr+dg*dg+db*db<TOL2; };
+    const seen=new Uint8Array(w*h), stack=[];
+    for(let x=0;x<w;x++){ stack.push(x,(h-1)*w+x); }
+    for(let y=0;y<h;y++){ stack.push(y*w,y*w+w-1); }
+    while(stack.length){
+      const pp=stack.pop(); if(seen[pp]) continue; seen[pp]=1;
+      const i=pp*4; if(!isBg(i)) continue;
+      px[i+3]=0;
+      const x=pp%w, y=(pp/w)|0;
+      if(x>0)stack.push(pp-1); if(x<w-1)stack.push(pp+1); if(y>0)stack.push(pp-w); if(y<h-1)stack.push(pp+w);
+    }
   }
-  sctx.putImageData(data,0,0);
-  /* crop to the garment's own bounding box so it fills the body quad */
+  function keptFrac(px){ let k=0; for(let i=3;i<px.length;i+=4) if(px[i]>12) k++; return k/(w*h); }
+  const d1=new Uint8ClampedArray(bp); flood(d1,42); const f1=keptFrac(d1);
+  let use=d1;
+  if(f1<0.22){ /* dark garment on dark bg: the flood ate the garment - retry tighter */
+    const d2=new Uint8ClampedArray(bp); flood(d2,20); const f2=keptFrac(d2);
+    if(f2>f1) use=d2;
+  }
+  const out1=new ImageData(use,w,h); sctx.putImageData(out1,0,0);
+  const px=use;
   let minX=w,maxX=-1,minY=h,maxY=-1;
   for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(px[(y*w+x)*4+3]>12){ if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; } }
   if(maxX<0) return src;
+  /* trim wispy shadow rows at the garment's top/bottom edges */
+  const rowCov=y=>{ let k=0; for(let x=minX;x<=maxX;x++) if(px[(y*w+x)*4+3]>12) k++; return k/(maxX-minX+1); };
+  let guard=0; while(maxY>minY && rowCov(maxY)<0.06 && guard++<h*0.10) maxY--;
+  guard=0; while(minY<maxY && rowCov(minY)<0.06 && guard++<h*0.10) minY++;
+  /* cut the studio floor-shadow under floating product shots: rows whose pixels
+     are barely different from the background colour are shadow, not garment.
+     Only when the garment itself is clearly distinct from the bg (a white tee
+     on white keeps everything). */
+  const solidFrac=y=>{ let k=0,n=0; for(let x=minX;x<=maxX;x+=2){ const i=(y*w+x)*4; if(px[i+3]>12){ n++; const dr=px[i]-bg[0], dg=px[i+1]-bg[1], db=px[i+2]-bg[2]; if(dr*dr+dg*dg+db*db>20000) k++; } } return n? k/n : 0; };
+  let solidRows=0, totRows=0;
+  for(let y=minY;y<=maxY;y+=4){ totRows++; if(solidFrac(y)>=0.08) solidRows++; }
+  if(totRows && solidRows/totRows>=0.25){
+    let cap=0; const maxCap=(maxY-minY)*0.15;
+    while(maxY>minY && solidFrac(maxY)<0.08 && cap<maxCap){ maxY--; cap++; }
+  }
   const pad=Math.round(Math.max(maxX-minX,maxY-minY)*0.02);
   minX=Math.max(0,minX-pad); minY=Math.max(0,minY-pad); maxX=Math.min(w-1,maxX+pad); maxY=Math.min(h-1,maxY+pad);
   const out=document.createElement('canvas'); out.width=maxX-minX+1; out.height=maxY-minY+1;
@@ -252,29 +300,134 @@ function lightCutout(img){
 function lightQuad(lm,W,H){
   const S=i=>({x:lm[i].x*W,y:lm[i].y*H});
   const ls=S(11),rs=S(12),lh=S(23),rh=S(24);
-  const dx=rs.x-ls.x, dy=rs.y-ls.y, span=Math.hypot(dx,dy);
-  const ux=dx/span, uy=dy/span;                 /* along-shoulder unit */
-  const cx=(ls.x+rs.x)/2, cy=(ls.y+rs.y)/2;     /* shoulder centre */
-  const hx=(lh.x+rh.x)/2, hy=(lh.y+rh.y)/2;     /* hip centre */
-  const wHalf=span*0.86, topLift=span*0.16, drop=(hy-cy)*0.42 + span*0.10;
-  const TL={x:cx-ux*wHalf, y:cy-uy*wHalf - topLift}, TR={x:cx+ux*wHalf, y:cy+uy*wHalf - topLift};
-  const BL={x:hx-ux*wHalf, y:hy-uy*wHalf + drop},   BR={x:hx+ux*wHalf, y:hy+uy*wHalf + drop};
+  const dx=rs.x-ls.x, dy=rs.y-ls.y, span=Math.hypot(dx,dy)||1;
+  const ux=dx/span, uy=dy/span;
+  let cx=(ls.x+rs.x)/2, cy=(ls.y+rs.y)/2;
+  let hx=(lh.x+rh.x)/2, hy=(lh.y+rh.y)/2;
+  const hipVis=Math.min(lm[23].visibility??1, lm[24].visibility??1);
+  if(hipVis<0.45 || hy<=cy){ /* hips unreliable or out of frame: synthesise along body-down */
+    let dnx=-uy, dny=ux; const nx=lm[0].x*W, ny=lm[0].y*H;
+    if(dnx*(cx-nx)+dny*(cy-ny)<0){ dnx=-dnx; dny=-dny; }
+    hx=cx+dnx*span*1.02; hy=cy+dny*span*1.02;
+  }
+  let ddx=hx-cx, ddy=hy-cy; const tLen=Math.hypot(ddx,ddy)||1; ddx/=tLen; ddy/=tLen;
+  /* close-up guard: shoulders cropped by the frame make span collapse and the
+     garment shrinks to a badge - rebuild span from head width instead */
+  const headW=Math.hypot((lm[7].x-lm[8].x)*W,(lm[7].y-lm[8].y)*H);
+  let effSpan=span, eux=ux, euy=uy;
+  if(headW>0 && span<headW*1.7){ effSpan=headW*2.3; }
+  const hipHalf=(hipVis>=0.45? Math.hypot(rh.x-lh.x,rh.y-lh.y)/2 : span*0.55);
+  const wTop=span*0.88, wBot=hipHalf+span*0.30, lift=span*0.02, drop=tLen*0.22;
+  const wTop2=effSpan*0.88, wBot2=hipHalf+effSpan*0.30, lift2=effSpan*0.02;
+  const TL={x:cx-eux*wTop2-ddx*lift2, y:cy-euy*wTop2-ddy*lift2};
+  const TR={x:cx+eux*wTop2-ddx*lift2, y:cy+euy*wTop2-ddy*lift2};
+  const BL={x:hx-eux*wBot2+ddx*drop, y:hy-euy*wBot2+ddy*drop};
+  const BR={x:hx+eux*wBot2+ddx*drop, y:hy+euy*wBot2+ddy*drop};
   return [TL,TR,BR,BL];
 }
-function lightWarp(ctx,g,quad){
-  const N=12, gw=g.naturalWidth||g.width, gh=g.naturalHeight||g.height, [TL,TR,BR,BL]=quad;
-  const lerp=(a,b,t)=>({x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t});
-  for(let i=0;i<N;i++){
-    const t0=i/N, t1=(i+1)/N;
-    const a=lerp(TL,BL,t0), b=lerp(TR,BR,t0), c=lerp(TL,BL,t1), d=lerp(TR,BR,t1);
-    const sy=gh*t0, sh=gh/N+3;
+function lightCategory(url){ const u=(url||'').toLowerCase();
+  if(/cap|hat|beanie|snapback/.test(u)) return 'head';
+  if(/pant|jean|short|cargo|trouser|skirt/.test(u)) return 'legs';
+  return 'torso'; }
+function lightQuadHead(lm,W,H){
+  const S=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const le=S(7), re=S(8);
+  const dx=re.x-le.x, dy=re.y-le.y, es=Math.hypot(dx,dy); if(es<W*0.03) return null;
+  const ux=dx/es, uy=dy/es; let dnx=-uy, dny=ux;
+  const nose=S(0), cx=(le.x+re.x)/2, cy=(le.y+re.y)/2;
+  if(dnx*(cx-nose.x)+dny*(cy-nose.y)<0){ dnx=-dnx; dny=-dny; }
+  const wH=es*1.25, hUp=es*1.28, hDn=es*0.30;
+  const tx=cx-dnx*hUp, ty=cy-dny*hUp, bx=cx+dnx*hDn, by=cy+dny*hDn;
+  return [{x:tx-ux*wH,y:ty-uy*wH},{x:tx+ux*wH,y:ty+uy*wH},{x:bx+ux*wH,y:by+uy*wH},{x:bx-ux*wH,y:by-uy*wH}];
+}
+function lightQuadLegs(lm,W,H){
+  const S=i=>({x:lm[i].x*W,y:lm[i].y*H});
+  const ls=S(11),rs=S(12);
+  const dx=rs.x-ls.x, dy=rs.y-ls.y, span=Math.hypot(dx,dy)||1;
+  const ux=dx/span, uy=dy/span;
+  const vis=i=>(lm[i].visibility==null?1:lm[i].visibility);
+  let hx,hy;
+  if(vis(23)>0.45&&vis(24)>0.45){ hx=(S(23).x+S(24).x)/2; hy=(S(23).y+S(24).y)/2; }
+  else{ let dnx=-uy, dny=ux; const nose=S(0), cx=(ls.x+rs.x)/2, cy=(ls.y+rs.y)/2;
+    if(dnx*(cx-nose.x)+dny*(cy-nose.y)<0){ dnx=-dnx; dny=-dny; }
+    hx=cx+dnx*span*1.02; hy=cy+dny*span*1.02; }
+  let ax,ay;
+  if(vis(27)>0.45&&vis(28)>0.45){ ax=(S(27).x+S(28).x)/2; ay=(S(27).y+S(28).y)/2; }
+  else{ ax=hx; ay=hy+span*1.9; }
+  const wT=span*0.72, wB=span*0.52;
+  return [{x:hx-ux*wT,y:hy-uy*wT},{x:hx+ux*wT,y:hy+uy*wT},{x:ax+ux*wB,y:ay+uy*wB},{x:ax-ux*wB,y:ay-uy*wB}];
+}
+function lightQuadFor(lm,W,H,url){
+  const c=lightCategory(url);
+  if(c==='head') return lightQuadHead(lm,W,H);
+  if(c==='legs') return lightQuadLegs(lm,W,H);
+  return lightQuad(lm,W,H);
+}
+async function lightPrepare(raw,url,det){
+  const cut=lightCutout(raw);
+  if(lightCategory(url)==='torso') return lightProductPatch(cut,det);
+  return {img:cut, quad:[{x:0,y:0},{x:cut.width,y:0},{x:cut.width,y:cut.height},{x:0,y:cut.height}]};
+}
+function lightWarp(ctx,patch,quad){
+  /* Triangulated grid warp: bilinear grid inside both quads, each cell drawn
+     as two exact-affine triangles - continuous for arbitrary quad shapes. */
+  const g=patch.img, sq=patch.quad;
+  const NX=10, NY=12;
+  const bilerp=(q,u,v)=>{ const top={x:q[0].x+(q[1].x-q[0].x)*u, y:q[0].y+(q[1].y-q[0].y)*u};
+    const bot={x:q[3].x+(q[2].x-q[3].x)*u, y:q[3].y+(q[2].y-q[3].y)*u};
+    return {x:top.x+(bot.x-top.x)*v, y:top.y+(bot.y-top.y)*v}; };
+  const aff=(p1,p2,p3,q1,q2,q3)=>{
+    const d=(p2.x-p1.x)*(p3.y-p1.y)-(p3.x-p1.x)*(p2.y-p1.y); if(!d) return null;
+    const A=((q2.x-q1.x)*(p3.y-p1.y)-(q3.x-q1.x)*(p2.y-p1.y))/d;
+    const C=((p2.x-p1.x)*(q3.x-q1.x)-(p3.x-p1.x)*(q2.x-q1.x))/d;
+    const B=((q2.y-q1.y)*(p3.y-p1.y)-(q3.y-q1.y)*(p2.y-p1.y))/d;
+    const D=((p2.x-p1.x)*(q3.y-q1.y)-(p3.x-p1.x)*(q2.y-q1.y))/d;
+    return [A,B,C,D,q1.x-A*p1.x-C*p1.y,q1.y-B*p1.x-D*p1.y];
+  };
+  const tri=(sp,dp)=>{
+    const m=aff(sp[0],sp[1],sp[2],dp[0],dp[1],dp[2]); if(!m) return;
+    const cx=(dp[0].x+dp[1].x+dp[2].x)/3, cy=(dp[0].y+dp[1].y+dp[2].y)/3;
+    const ex=dp.map(q=>{ const dx=q.x-cx, dy=q.y-cy, l=Math.hypot(dx,dy)||1; return {x:q.x+dx/l*2.2, y:q.y+dy/l*2.2}; });
     ctx.save();
-    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.lineTo(d.x,d.y); ctx.lineTo(c.x,c.y); ctx.closePath(); ctx.clip();
-    ctx.setTransform((b.x-a.x)/gw,(b.y-a.y)/gw,(c.x-a.x)/sh,(c.y-a.y)/sh,a.x,a.y);
-    ctx.drawImage(g,0,sy,gw,sh,0,0,gw,sh);
+    ctx.beginPath(); ctx.moveTo(ex[0].x,ex[0].y); ctx.lineTo(ex[1].x,ex[1].y); ctx.lineTo(ex[2].x,ex[2].y); ctx.closePath(); ctx.clip();
+    ctx.setTransform(m[0],m[1],m[2],m[3],m[4],m[5]);
+    ctx.drawImage(g,0,0);
     ctx.restore();
+  };
+  for(let j=0;j<NY;j++) for(let i=0;i<NX;i++){
+    const u0=i/NX,u1=(i+1)/NX,v0=j/NY,v1=(j+1)/NY;
+    const s00=bilerp(sq,u0,v0),s10=bilerp(sq,u1,v0),s11=bilerp(sq,u1,v1),s01=bilerp(sq,u0,v1);
+    const d00=bilerp(quad,u0,v0),d10=bilerp(quad,u1,v0),d11=bilerp(quad,u1,v1),d01=bilerp(quad,u0,v1);
+    tri([s00,s10,s01],[d00,d10,d01]);
+    tri([s10,s11,s01],[d10,d11,d01]);
   }
   ctx.setTransform(1,0,0,1,0,0);
+}
+/* Locate the garment AS WORN in the product photo: run pose on the cutout and
+   keep only the torso patch (shoulders->hips + margins). Falls back to the
+   full cutout when the product shot has no detectable person (flat-lay). */
+let lightImageDet=null;
+async function lightProductPatch(cut, det){
+  const W=cut.width, H=cut.height;
+  const full={img:cut, quad:[{x:0,y:0},{x:W,y:0},{x:W,y:H},{x:0,y:H}]};
+  try{
+    const d=det || lightImageDet || (lightImageDet=await lightMakeLandmarker('IMAGE'));
+    const res=d.detect(cut);
+    const lm=res && res.landmarks && res.landmarks[0];
+    if(!lm) return full;
+    const S=i=>({x:lm[i].x*W,y:lm[i].y*H});
+    const ls=S(11),rs=S(12),lh=S(23),rh=S(24);
+    const dx=rs.x-ls.x, dy=rs.y-ls.y, span=Math.hypot(dx,dy)||1;
+    const ux=dx/span, uy=dy/span;
+    const cx=(ls.x+rs.x)/2, cy=(ls.y+rs.y)/2, hx=(lh.x+rh.x)/2, hy=(lh.y+rh.y)/2;
+    let ddx=hx-cx, ddy=hy-cy; const tLen=Math.hypot(ddx,ddy)||1; ddx/=tLen; ddy/=tLen;
+    const out=0.16*span, up=0.12*span, dn=0.20*tLen, side=0.10*span;
+    const TL={x:ls.x-ux*out-ddx*up, y:ls.y-uy*out-ddy*up};
+    const TR={x:rs.x+ux*out-ddx*up, y:rs.y+uy*out-ddy*up};
+    const BL={x:lh.x-ux*side+ddx*dn, y:lh.y-uy*side+ddy*dn};
+    const BR={x:rh.x+ux*side+ddx*dn, y:rh.y+uy*side+ddy*dn};
+    return {img:cut, quad:[TL,TR,BR,BL]};
+  }catch(e){ return full; }
 }
 async function lightEnsureGarment(){
   const u=L$('lightGarment').value.trim();
@@ -282,7 +435,7 @@ async function lightEnsureGarment(){
   const abs=new URL(u,location.href).href;
   if(lightGarmentObj && lightGarmentObj.__src===abs) return lightGarmentObj;
   const raw=await lightLoadGarment(u);
-  lightGarmentObj=lightCutout(raw); lightGarmentObj.__src=abs; return lightGarmentObj;
+  lightGarmentObj=await lightPrepare(raw,u); lightGarmentObj.__src=abs; return lightGarmentObj;
 }
 L$('lightGarment').addEventListener('change',()=>{ lightGarmentObj=null; });
 
@@ -303,7 +456,8 @@ L$('lightBtn').addEventListener('click', async ()=>{
     cv.width=v.videoWidth; cv.height=v.videoHeight;
     lightRunning=true; btn.disabled=false; btn.textContent='Stop';
     st.textContent='Live Light ✦ Move — the garment follows your torso.';
-    let lastT=-1;
+    let lastT=-1, lastMsg='';
+    const say=m=>{ if(m!==lastMsg){ lastMsg=m; st.textContent=m; } };
     const loop=()=>{
       if(!lightRunning) return;
       if(v.currentTime!==lastT){
@@ -312,10 +466,17 @@ L$('lightBtn').addEventListener('click', async ()=>{
           const res=lightLandmarker.detectForVideo(v,performance.now());
           ctx.clearRect(0,0,cv.width,cv.height);
           const lm=res && res.landmarks && res.landmarks[0];
-          if(lm){
-            if(!lightSmooth) lightSmooth=lm.map(p=>({x:p.x,y:p.y}));
-            else lm.forEach((p,i)=>{ lightSmooth[i].x+=(p.x-lightSmooth[i].x)*0.55; lightSmooth[i].y+=(p.y-lightSmooth[i].y)*0.55; });
-            lightWarp(ctx,g,lightQuad(lightSmooth,cv.width,cv.height));
+          if(!lm){ say('No body detected — stand in front of the camera.'); }
+          else{
+            if(!lightSmooth) lightSmooth=lm.map(p=>({x:p.x,y:p.y,visibility:p.visibility}));
+            else lm.forEach((p,i)=>{ lightSmooth[i].x+=(p.x-lightSmooth[i].x)*0.55; lightSmooth[i].y+=(p.y-lightSmooth[i].y)*0.55; lightSmooth[i].visibility=p.visibility; });
+            const spanPx=Math.hypot(lightSmooth[11].x-lightSmooth[12].x,lightSmooth[11].y-lightSmooth[12].y)*cv.width;
+            if(spanPx<cv.width*0.10){ say('Step back a little — the camera needs your shoulders and waist in frame.'); }
+            else if(((lm[11].visibility??1)>=0.35)&&((lm[12].visibility??1)>=0.35)){
+              say('Live Light ✦ Move — the garment follows you.');
+              const q=lightQuadFor(lightSmooth,cv.width,cv.height,L$('lightGarment').value);
+              if(q) lightWarp(ctx,g,q);
+            }
           }
         }catch(e){ /* frame hiccup */ }
       }
@@ -329,13 +490,14 @@ L$('lightBtn').addEventListener('click', async ()=>{
 window.__vtxLightTest=async function(personUrl,garmentUrl){
   const det=await lightMakeLandmarker('IMAGE');
   const person=await lightLoadGarment(personUrl);
-  const g=lightCutout(await lightLoadGarment(garmentUrl));
+  const g=await lightPrepare(await lightLoadGarment(garmentUrl), garmentUrl, det);
   const res=det.detect(person);
   const lm=res && res.landmarks && res.landmarks[0];
   if(!lm) return {found:false};
   const cv=document.createElement('canvas'); cv.width=person.naturalWidth; cv.height=person.naturalHeight;
   const ctx=cv.getContext('2d'); ctx.drawImage(person,0,0);
-  lightWarp(ctx,g,lightQuad(lm,cv.width,cv.height));
+  const q=lightQuadFor(lm,cv.width,cv.height,garmentUrl);
+  if(q) lightWarp(ctx,g,q);
   const px=ctx.getImageData(cv.width/2, cv.height*0.45, 1, 1).data;
   return {found:true, shoulderSpan:Math.abs(lm[11].x-lm[12].x).toFixed(3), centrePixel:[px[0],px[1],px[2]], canvas:cv};
 };
