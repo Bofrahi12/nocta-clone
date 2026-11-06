@@ -697,7 +697,7 @@ window.__vtxLightTest=async function(personUrl,garmentUrl){
 const G$=id=>document.getElementById(id);
 let genRunning=false, genStream=null, genClient=null, genGarmBlob=null;
 let genFailStreak=0, genAnonFallback=false;
-let genTrackPatch=null, genImgDet=null, genVidDet=null, genTrackRaf=0;
+let genTrackPatch=null, genImgDet=null, genVidDet=null, genTrackRaf=0, genSmooth=null, genPatchBorn=0;
 async function genExtractTrack(url){
   try{
     if(!G$('genTrack').checked){ genTrackPatch=null; return; }
@@ -711,7 +711,7 @@ async function genExtractTrack(url){
       const gu=(G$('genGarment').value||'').toLowerCase();
       const cat=/pant|short|jean|denim|skirt|legging|trouser/.test(gu)?'default':(/jacket|bomber|hoodie|coat|parka/.test(gu)?'bomber':'tee');
       const q = D.lightQuadFor(lm, im.naturalWidth, im.naturalHeight, cat, null);
-      if(q) genTrackPatch={ img: im, quad: q };
+      if(q){ genTrackPatch={ img: im, quad: q }; genPatchBorn=performance.now(); }
     }
   }catch(e){}
 }
@@ -727,14 +727,22 @@ function genTrackLoop(){
     if(!genTrackPatch || !genVidDet || !v.videoWidth){ ctx.clearRect(0,0,cv.width,cv.height); return; }
     if(cv.width!==v.videoWidth){ cv.width=v.videoWidth; cv.height=v.videoHeight; }
     let res=null; try{ res=genVidDet.detectForVideo(v,t); }catch(e){}
-    const lm=res && res.landmarks && res.landmarks[0];
+    let lm=res && res.landmarks && res.landmarks[0];
+    if(lm){
+      if(!genSmooth) genSmooth=lm.map(p=>({x:p.x, y:p.y, z:p.z||0, visibility:p.visibility}));
+      else for(let i=0;i<lm.length;i++){ const s=genSmooth[i], t=lm[i]; s.x+=(t.x-s.x)*0.45; s.y+=(t.y-s.y)*0.45; s.z+=((t.z||0)-s.z)*0.45; s.visibility=t.visibility; }
+      lm=genSmooth;
+    }
     if(!lm){ ctx.clearRect(0,0,cv.width,cv.height); return; }
     const D=window.__vtxDebug;
     const cat=/pant|short|jean|denim|skirt|legging|trouser/.test((G$('genGarment').value||'').toLowerCase())?'bottoms':'top';
     const q=D.lightQuadFor(lm,cv.width,cv.height,cat==='bottoms'?'default':'bomber',null);
     if(!q){ ctx.clearRect(0,0,cv.width,cv.height); return; }
     ctx.clearRect(0,0,cv.width,cv.height);
+    const age=performance.now()-genPatchBorn;
+    ctx.globalAlpha = age<400 ? 0.35+0.65*(age/400) : 1;
     D.lightDrawFit(ctx,genTrackPatch,q,D.lightBendFn(lm,cv.width,cv.height,q),D.lightMaskCanvas(res,cv.width,cv.height),lm,v);
+    ctx.globalAlpha = 1;
   };
   genTrackRaf=requestAnimationFrame(tick);
 }
