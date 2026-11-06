@@ -696,6 +696,7 @@ window.__vtxLightTest=async function(personUrl,garmentUrl){
 /* ===== VERTEX AI Live \u2014 generative frames (FASHN VTON) ===== */
 const G$=id=>document.getElementById(id);
 let genRunning=false, genStream=null, genClient=null, genGarmBlob=null;
+let genFailStreak=0, genAnonFallback=false;
 let genTrackPatch=null, genImgDet=null, genVidDet=null, genTrackRaf=0;
 async function genExtractTrack(url){
   try{
@@ -785,8 +786,26 @@ G$('genBtn').addEventListener('click', async ()=>{
     genTrackLoop();
     genStatus('AI Live \u2726 generating your first frame\u2026');
     while(genRunning){
-      try{ await genFrame(); }
-      catch(e){ genStatus('Frame failed ('+((e&&e.message)||e)+') \u2014 retrying\u2026'); await new Promise(r=>setTimeout(r,3000)); }
+      try{ await genFrame(); genFailStreak=0; }
+      catch(e){
+        const msg=String((e&&e.message)||e);
+        if(/zerogpu|quota|exceeded|runs limit/i.test(msg) && window.__vtxHfTok() && !genAnonFallback){
+          genAnonFallback=true;
+          genStatus('Your Hugging Face quota is exhausted \u2014 switching to the public queue\u2026');
+          try{ const {Client}=await import('https://cdn.jsdelivr.net/npm/@gradio/client/+esm'); genClient=await Client.connect('fashn-ai/fashn-vton-1.5'); }catch(e2){ genClient=null; }
+          await new Promise(r=>setTimeout(r,1500));
+          continue;
+        }
+        genFailStreak++;
+        if(genFailStreak>=3){
+          genStatus('The free GPU queue is saturated right now \u2014 stopped after 3 attempts. Wait a few minutes and start again.');
+          genRunning=false; btn.textContent='Start AI Live';
+          try{ genStream&&genStream.getTracks().forEach(x=>x.stop()); }catch(_){}
+          break;
+        }
+        genStatus('Frame failed ('+msg+') \u2014 retrying\u2026');
+        await new Promise(r=>setTimeout(r,3000));
+      }
     }
   }catch(err){ genStatus('AI Live could not start: '+((err&&err.message)||err)); btn.disabled=false; }
 });
