@@ -42,8 +42,8 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
 <header><b>VERTEX TRY-ON</b><span>AI FITTING ROOM ✦</span></header>
 <main>
   <div class="tabs">
-    <button id="tabLive" class="on">🎥 Live Pro — Decart</button>
-    <button id="tabLight">⚡ Live Light — Ours · Free</button>
+    <button id="tabLive">🎥 Live Pro — Decart</button>
+    <button id="tabLight" class="on">⚡ Live Light — Ours · Free</button>
     <button id="tabPhoto">📸 Photo Pro — Ours</button>
     <button id="tabGen">🎞️ AI Live — Ours</button>
   </div>
@@ -77,7 +77,7 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
   </section>
 
   <!-- LIVE MODE -->
-  <section id="liveMode">
+  <section id="liveMode" class="hidden">
     <div class="card">
       <h3>LIVE TRY-ON (DECART LUCY)</h3>
       <p>Real-time video try-on runs on Decart's Lucy VTON model. It needs the store's own Decart API key — new Decart accounts start with free test credits. The key stays in this browser only.</p>
@@ -90,7 +90,7 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
     </div>
   </section>
   <!-- LIVE LIGHT MODE (ours, in-browser, free) -->
-  <section id="lightMode" class="hidden">
+  <section id="lightMode">
     <div class="card">
       <h3>LIVE LIGHT — OUR OWN ENGINE · FREE</h3>
       <p>Runs 100% in your browser: body-pose tracking (MediaPipe) pins the garment to your torso in real time. No server, no per-second cost — ours. It is a light overlay, not a photoreal re-render like Lucy Pro.</p>
@@ -113,9 +113,10 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
       <input id="genGarment" type="url" placeholder="Garment image URL" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;margin:8px 0">
       <img id="genGarmentImg" class="hidden" style="width:90px;border-radius:10px">
       <button id="genBtn" class="go">Start AI Live</button>
+      <label class="note" style="display:block;margin-top:8px"><input type="checkbox" id="genTrack" checked> <b>Live tracking:</b> the generated garment follows your body between frames</label>
       <div id="genStatus" style="font-size:13px;color:#444;margin-top:10px">Idle.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-        <video id="genVideo" autoplay playsinline muted></video>
+        <div style="position:relative"><video id="genVideo" autoplay playsinline muted style="width:100%;display:block;border-radius:12px"></video><canvas id="genTrackCv" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:12px"></canvas></div>
         <img id="genResult" class="hidden" style="width:100%;border-radius:12px">
       </div>
     </div>
@@ -663,7 +664,7 @@ function lightDrawFit(ctx,g,q,bend,maskCv,lm,personSrc){
   ctx.drawImage(lightOff,0,0);
 }
 
-window.__vtxDebug={lightFaceAnchors, lightQuadFor, lightMakeFace, lightMakeLandmarker, lightMaskCanvas, lightPrepare};
+window.__vtxDebug={lightFaceAnchors, lightQuadFor, lightMakeFace, lightMakeLandmarker, lightMaskCanvas, lightPrepare, lightProductPatch, lightDrawFit, lightBendFn};
 /* QA hook: run the same detection + warp on a still photo (no camera needed) */
 window.__vtxLightTest=async function(personUrl,garmentUrl){
   const det=await lightMakeLandmarker('IMAGE');
@@ -691,6 +692,47 @@ window.__vtxLightTest=async function(personUrl,garmentUrl){
 /* ===== VERTEX AI Live \u2014 generative frames (FASHN VTON) ===== */
 const G$=id=>document.getElementById(id);
 let genRunning=false, genStream=null, genClient=null, genGarmBlob=null;
+let genTrackPatch=null, genImgDet=null, genVidDet=null, genTrackRaf=0;
+async function genExtractTrack(url){
+  try{
+    if(!G$('genTrack').checked){ genTrackPatch=null; return; }
+    const D=window.__vtxDebug; if(!D||!D.lightProductPatch) return;
+    const im=new Image(); im.crossOrigin='anonymous';
+    await new Promise((res,rej)=>{ im.onload=res; im.onerror=rej; im.src=url; });
+    genImgDet = genImgDet || await D.lightMakeLandmarker('IMAGE');
+    const res = genImgDet.detect(im);
+    const lm = res && res.landmarks && res.landmarks[0];
+    if(lm && genRunning){
+      const gu=(G$('genGarment').value||'').toLowerCase();
+      const cat=/pant|short|jean|denim|skirt|legging|trouser/.test(gu)?'default':(/jacket|bomber|hoodie|coat|parka/.test(gu)?'bomber':'tee');
+      const q = D.lightQuadFor(lm, im.naturalWidth, im.naturalHeight, cat, null);
+      if(q) genTrackPatch={ img: im, quad: q };
+    }
+  }catch(e){}
+}
+function genTrackLoop(){
+  cancelAnimationFrame(genTrackRaf);
+  let lastT=0;
+  const tick=(t)=>{
+    if(!genRunning) return;
+    genTrackRaf=requestAnimationFrame(tick);
+    if(t-lastT<40) return; lastT=t;
+    const v=G$('genVideo'), cv=G$('genTrackCv'); if(!v||!cv) return;
+    const ctx=cv.getContext('2d');
+    if(!genTrackPatch || !genVidDet || !v.videoWidth){ ctx.clearRect(0,0,cv.width,cv.height); return; }
+    if(cv.width!==v.videoWidth){ cv.width=v.videoWidth; cv.height=v.videoHeight; }
+    let res=null; try{ res=genVidDet.detectForVideo(v,t); }catch(e){}
+    const lm=res && res.landmarks && res.landmarks[0];
+    if(!lm){ ctx.clearRect(0,0,cv.width,cv.height); return; }
+    const D=window.__vtxDebug;
+    const cat=/pant|short|jean|denim|skirt|legging|trouser/.test((G$('genGarment').value||'').toLowerCase())?'bottoms':'top';
+    const q=D.lightQuadFor(lm,cv.width,cv.height,cat==='bottoms'?'default':'bomber',null);
+    if(!q){ ctx.clearRect(0,0,cv.width,cv.height); return; }
+    ctx.clearRect(0,0,cv.width,cv.height);
+    D.lightDrawFit(ctx,genTrackPatch,q,D.lightBendFn(lm,cv.width,cv.height,q),D.lightMaskCanvas(res,cv.width,cv.height),lm,v);
+  };
+  genTrackRaf=requestAnimationFrame(tick);
+}
 function genStatus(s){ G$('genStatus').textContent=s; }
 function genKind(url){
   const s=(url||'').toLowerCase();
@@ -710,14 +752,14 @@ async function genFrame(){
   const res=await genClient.predict('/try_on',{
     person_image:frame, garment_image:genGarmBlob,
     category:kind.category, garment_photo_type:kind.garment_photo_type,
-    num_timesteps:10, guidance_scale:1.5, seed:42, segmentation_free:true });
+    num_timesteps:12, guidance_scale:1.5, seed:42, segmentation_free:true });
   const out=res.data[0]; const url=typeof out==='string'?out:(out.url||out.path);
-  const im=G$('genResult'); im.src=url; im.classList.remove('hidden');
+  const im=G$('genResult'); im.src=url; im.classList.remove('hidden'); genExtractTrack(url);
   genStatus('AI Live \u2726 frame ready in '+Math.round((Date.now()-t0)/1000)+'s \u2014 generating the next\u2026');
 }
 G$('genBtn').addEventListener('click', async ()=>{
   const btn=G$('genBtn');
-  if(genRunning){ genRunning=false; btn.textContent='Start AI Live'; genStatus('Stopped.'); try{ genStream&&genStream.getTracks().forEach(x=>x.stop()); }catch(e){} return; }
+  if(genRunning){ genRunning=false; btn.textContent='Start AI Live'; genStatus('Stopped.'); genTrackPatch=null; cancelAnimationFrame(genTrackRaf); const tc=G$('genTrackCv'); if(tc) tc.getContext('2d').clearRect(0,0,tc.width,tc.height); try{ genStream&&genStream.getTracks().forEach(x=>x.stop()); }catch(e){} return; }
   const gu=G$('genGarment').value.trim();
   if(!gu){ genStatus('Add a garment image URL first.'); return; }
   btn.disabled=true;
@@ -733,6 +775,8 @@ G$('genBtn').addEventListener('click', async ()=>{
     genStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
     const v=G$('genVideo'); v.srcObject=genStream; await v.play();
     genRunning=true; btn.disabled=false; btn.textContent='Stop';
+    try{ const D=window.__vtxDebug; if(D && !genVidDet) genVidDet=await D.lightMakeLandmarker('VIDEO'); }catch(e){}
+    genTrackLoop();
     genStatus('AI Live \u2726 generating your first frame\u2026');
     while(genRunning){
       try{ await genFrame(); }
