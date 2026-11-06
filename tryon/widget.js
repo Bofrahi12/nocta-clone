@@ -36,7 +36,7 @@
     var ov = document.createElement("div");
     ov.className = "vtx-overlay";
     ov.id = "vtx-overlay";
-    var src = room + "?v=12&store=" + encodeURIComponent(location.hostname);
+    var src = room + "?v=13&store=" + encodeURIComponent(location.hostname);
     if (garmentUrl) src += "&garment=" + encodeURIComponent(garmentUrl);
     ov.innerHTML =
       '<div class="vtx-panel"><div class="vtx-head"><span>Try-On ✦ VERTEX</span>' +

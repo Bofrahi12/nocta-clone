@@ -43,9 +43,9 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
 <main>
   <div class="tabs">
     <button id="tabLive">🎥 Live Pro — Decart</button>
-    <button id="tabLight" class="on">⚡ Live Light — Ours · Free</button>
+    <button id="tabLight">⚡ Live Light — Ours · Free</button>
     <button id="tabPhoto">📸 Photo Pro — Ours</button>
-    <button id="tabGen">🎞️ AI Live — Ours</button>
+    <button id="tabGen" class="on">🎞️ AI Live — Ours</button>
   </div>
 
   <!-- PHOTO MODE -->
@@ -90,7 +90,7 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
     </div>
   </section>
   <!-- LIVE LIGHT MODE (ours, in-browser, free) -->
-  <section id="lightMode">
+  <section id="lightMode" class="hidden">
     <div class="card">
       <h3>LIVE LIGHT — OUR OWN ENGINE · FREE</h3>
       <p>Runs 100% in your browser: body-pose tracking (MediaPipe) pins the garment to your torso in real time. No server, no per-second cost — ours. It is a light overlay, not a photoreal re-render like Lucy Pro.</p>
@@ -106,7 +106,7 @@ a.dl{display:inline-block;margin-top:10px;font-weight:800;color:var(--ink)}
   </section>
   <p class="note" style="text-align:center;margin-top:8px">Powered by VERTEX Try-On · Photo Pro: FASHN VTON 1.5 (Apache-2.0) · Live Light: VERTEX in-browser pose engine · Live Pro: Decart Lucy VTON</p>
   <!-- AI LIVE MODE (generative frames, ours) -->
-  <section id="genMode" class="hidden">
+  <section id="genMode">
     <div class="card">
       <h3>🎞️ AI LIVE — GENERATED ON YOU, FRAME BY FRAME</h3>
       <p class="note">Our generative engine (FASHN VTON, Apache-2.0) re-dresses a fresh camera frame every cycle — real generated fabric on your body, not a flat overlay. The free GPU needs some seconds per frame; a rented GPU makes it smooth.</p>
@@ -757,6 +757,7 @@ async function genFrame(){
   const im=G$('genResult'); im.src=url; im.classList.remove('hidden'); genExtractTrack(url);
   genStatus('AI Live \u2726 frame ready in '+Math.round((Date.now()-t0)/1000)+'s \u2014 generating the next\u2026');
 }
+try{ const gq=new URLSearchParams(location.search).get('garment'); const gf=G$('genGarment'); if(gf && !gf.value) gf.value=gq||'img/bomber-olive.webp'; if(gf && gf.value){ const gi=G$('genGarmentImg'); if(gi){ gi.src=gf.value; gi.classList.remove('hidden'); } } }catch(e){}
 G$('genBtn').addEventListener('click', async ()=>{
   const btn=G$('genBtn');
   if(genRunning){ genRunning=false; btn.textContent='Start AI Live'; genStatus('Stopped.'); genTrackPatch=null; cancelAnimationFrame(genTrackRaf); const tc=G$('genTrackCv'); if(tc) tc.getContext('2d').clearRect(0,0,tc.width,tc.height); try{ genStream&&genStream.getTracks().forEach(x=>x.stop()); }catch(e){} return; }
